@@ -4,100 +4,384 @@ GO
 -- Populate data to bank tables 
 
 -- Populate data TBranch table
-INSERT INTO TBranch (Name, IsOffice, CityName)
-VALUES('SKS_Branch01', 0, 'Calgary');
+	-- Create store procedure to insert into TBranch table
+	IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PInsertTableBranch'))
+ 	EXEC('CREATE PROCEDURE [PInsertTableBranch] AS BEGIN SET NOCOUNT ON; END');
+	GO
 
-INSERT INTO TBranch (Name, IsOffice, CityName)
-VALUES('SKS_Branch08', 0, 'Toronto');
+	ALTER PROCEDURE [PInsertTableBranch]
+	    @BranchName NVARCHAR(100) = NULL,
+	    @IsOffice INT = NULL,
+	    @CityName NVARCHAR(100) = NULL,
+	    @PostalCode NVARCHAR(100) = NULL
 
-INSERT INTO TBranch (Name, IsOffice, CityName)
-VALUES('SKS_Branch07', 0, 'Toronto');
+	AS
+	 
+	SET NOCOUNT ON;
+	SET XACT_ABORT ON;
 
-INSERT INTO TBranch (Name, IsOffice, CityName)
-VALUES('SKS_Branch06', 0, 'Edmonton');
+	    BEGIN
 
-INSERT INTO TBranch (Name, IsOffice, CityName)
-VALUES('SKS_Branch05', 0, 'Edmonton');
+	        IF @BranchName IS NULL OR LEN(@BranchName) = 0
+	            THROW 50001, 'INVALID Branch Name', 1;
 
-INSERT INTO TBranch (Name, IsOffice, CityName)
-VALUES('SKS_Office02', 1, 'Vancouver');
+	        IF @IsOffice IS NULL OR LEN(@IsOffice) = 0
+	            THROW 50001, 'INVALID IsOffice', 1;
 
-INSERT INTO TBranch (Name, IsOffice, CityName)
-VALUES('SKS_Branch04', 0, 'Vancouver');
+	        IF @CityName IS NULL OR LEN(@CityName) = 0
+	            THROW 50001, 'INVALID City Name', 1;
 
-INSERT INTO TBranch (Name, IsOffice, CityName)
-VALUES('SKS_Branch03', 0, 'Vancouver');
+	        IF @PostalCode IS NULL OR LEN(@PostalCode) = 0
+	            THROW 50001, 'INVALID Postal Code', 1;
 
-INSERT INTO TBranch (Name, IsOffice, CityName)
-VALUES('SKS_Office01', 1, 'Calgary');
+	        INSERT INTO TBranch (Name, IsOffice, CityName, PostalCode)
+	        VALUES(@BranchName, @IsOffice, @CityName, @PostalCode)
 
-INSERT INTO TBranch (Name, IsOffice, CityName)
-VALUES('SKS_Branch02', 0, 'Calgary');
-GO
+	    END 
+	GO
+
+	-- EXEC SP PInsertTableBranch
+	EXEC PInsertTableBranch
+         @BranchName = 'SKS_Branch01',
+         @IsOffice = 0,
+         @CityName = 'Calgary',
+         @PostalCode = 'T4A6M4';
+    PRINT 'Row was inserted.';
+    GO
+
+	EXEC PInsertTableBranch
+         @BranchName = 'SKS_Branch08',
+         @IsOffice = 0,
+         @CityName = 'Toronto',
+         @PostalCode = 'T4A6M4';
+    PRINT 'Row was inserted.';
+    GO
+
+    EXEC PInsertTableBranch
+         @BranchName = 'SKS_Branch07',
+         @IsOffice = 0,
+         @CityName = 'Toronto',
+         @PostalCode = 'T2A6H4';
+    PRINT 'Row was inserted.';
+    GO
+
+    EXEC PInsertTableBranch
+         @BranchName = 'SKS_Branch06',
+         @IsOffice = 0,
+         @CityName = 'Edmonton',
+         @PostalCode = 'T8K6M4';
+    PRINT 'Row was inserted.';
+    GO
+
+    EXEC PInsertTableBranch
+         @BranchName = 'SKS_Branch05',
+         @IsOffice = 0,
+         @CityName = 'Edmonton',
+         @PostalCode = 'T2A6M4';
+    PRINT 'Row was inserted.';
+    GO
+
+    EXEC PInsertTableBranch
+         @BranchName = 'SKS_Office02',
+         @IsOffice = 1,
+         @CityName = 'Vancouver',
+         @PostalCode = 'T2J6M4';
+    PRINT 'Row was inserted.';
+    GO
+
+    EXEC PInsertTableBranch
+         @BranchName = 'SKS_Branch04',
+         @IsOffice = 0,
+         @CityName = 'Vancouver',
+         @PostalCode = 'P2A6M4';
+    PRINT 'Row was inserted.';
+    GO
+
+    EXEC PInsertTableBranch
+         @BranchName = 'SKS_Branch03',
+         @IsOffice = 0,
+         @CityName = 'Vancouver',
+         @PostalCode = 'K2A6M4';
+    PRINT 'Row was inserted.';
+    GO
+
+    EXEC PInsertTableBranch
+         @BranchName = 'SKS_Office01',
+         @IsOffice = 1,
+         @CityName = 'Calgary',
+         @PostalCode = 'B2A6M4';
+    PRINT 'Row was inserted.';
+    GO
+
+    EXEC PInsertTableBranch
+         @BranchName = 'SKS_Branch02',
+         @IsOffice = 0,
+         @CityName = 'Calgary',
+         @PostalCode = 'T2A6M4';
+    PRINT 'Row was inserted.';
+    GO
 
 -- Populate data TEmployee table
-INSERT INTO TEmployee (StartDate, FirstName, LastName, Position, IsManagedBy, PostalAddressCode)
-VALUES('2016-01-10', 'Hai', 'Do', 'banker', 'Ryan', 'T2A6M4');
+	-- Create Store Procedure to insert data Employee table
+	IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PInsertTableEmployee'))
+ 	EXEC('CREATE PROCEDURE [PInsertTableEmployee] AS BEGIN SET NOCOUNT ON; END');
+	GO
 
-INSERT INTO TEmployee (StartDate, FirstName, LastName, Position, IsManagedBy, PostalAddressCode)
-VALUES('2010-01-10', 'Ryan', 'Roffal', 'manager', 'higherboss', 'T2R6M4');
+	ALTER PROCEDURE [PInsertTableEmployee]
+	    @StartDate DATE = NULL,
+	    @FirstName NVARCHAR(80) = NULL,
+	    @LastName NVARCHAR(80) = NULL,
+	    @Position NVARCHAR(100) = NULL,
+        @IsManagedBy NVARCHAR(100) = NULL,
+        @PostalAddressCode NVARCHAR(20) = NULL
 
-INSERT INTO TEmployee (StartDate, FirstName, LastName, Position, IsManagedBy, PostalAddressCode)
-VALUES('2016-01-10', 'Peter', 'Kerry', 'banker', 'Ryan', 'T2Q6M4');
+	AS
+	 
+	SET NOCOUNT ON;
+	SET XACT_ABORT ON;
 
-INSERT INTO TEmployee (StartDate, FirstName, LastName, Position, IsManagedBy, PostalAddressCode)
-VALUES('2012-01-10', 'Jelly', 'Horn', 'banker', 'Ryan', 'T2H6K4');
+	    BEGIN
 
-INSERT INTO TEmployee (StartDate, FirstName, LastName, Position, IsManagedBy, PostalAddressCode)
-VALUES('2014-01-10', 'John', 'Smith', 'banker', 'Ryan', 'T2B2J9');
+	        IF @StartDate IS NULL OR @StartDate > GETDATE()
+	            THROW 50001, 'INVALID Start Date', 1;
 
-INSERT INTO TEmployee (StartDate, FirstName, LastName, Position, IsManagedBy, PostalAddressCode)
-VALUES('2013-01-10', 'Anderson', 'Jayson', 'loan officer', 'Ryan', 'T2J6M4');
+	        IF @FirstName IS NULL OR LEN(@FirstName) = 0
+	            THROW 50001, 'INVALID First Name', 1;
 
-INSERT INTO TEmployee (StartDate, FirstName, LastName, Position, IsManagedBy, PostalAddressCode)
-VALUES('2018-04-23', 'Sandeep', 'Saini', 'banker', 'Ryan', 'J2K6L4');
+	        IF @LastName IS NULL OR LEN(@LastName) = 0
+	            THROW 50001, 'INVALID Last Name', 1;
 
-INSERT INTO TEmployee (StartDate, FirstName, LastName, Position, IsManagedBy, PostalAddressCode)
-VALUES('2017-01-10', 'Karamullah', 'Agha', 'banker', 'Ryan', 'K2A6M4');
+	        IF @Position IS NULL OR LEN(@Position) = 0
+	            THROW 50001, 'INVALID employee Position', 1;
 
-INSERT INTO TEmployee (StartDate, FirstName, LastName, Position, IsManagedBy, PostalAddressCode)
-VALUES('2015-08-23', 'Brijesh', 'Patel', 'loan officer', 'Ryan', 'T9A6M8');
+            IF @IsManagedBy IS NULL OR LEN(@IsManagedBy) = 0
+                THROW 50001, 'INVALID IsManagedBy', 1;
 
-INSERT INTO TEmployee (StartDate, FirstName, LastName, Position, IsManagedBy, PostalAddressCode)
-VALUES('2016-03-17', 'Pablo', 'Winter', 'banker', 'Ryan', 'T2Z6K4');
-GO
+            IF @PostalAddressCode IS NULL OR LEN(@PostalAddressCode) = 0
+                THROW 50001, 'INVALID postal code', 1;
+
+	        INSERT INTO TEmployee (StartDate, FirstName, LastName, Position, IsManagedBy, PostalAddressCode)
+	        VALUES(@StartDate, @FirstName, @LastName, @Position, @IsManagedBy, @PostalAddressCode)
+
+	    END 
+	GO
+
+	-- Execute SP insert Employee by adding data
+	EXEC PInsertTableEmployee
+	 @StartDate = '2016-01-10',
+	 @FirstName = 'Hai',
+	 @LastName = 'Do',
+	 @Position = 'banker',
+	 @IsManagedBy = 'Ryan',
+	 @PostalAddressCode = 'T2A6M4'
+	PRINT 'Row was inserted';
+
+	EXEC PInsertTableEmployee
+     @StartDate = '2010-01-10',
+     @FirstName = 'Ryan',
+     @LastName = 'Roffal',
+     @Position = 'manager',
+     @IsManagedBy = 'higherboss',
+     @PostalAddressCode = 'T2R6M4'
+	PRINT 'Row was inserted';
+
+	EXEC PInsertTableEmployee
+     @StartDate = '2016-01-10',
+     @FirstName = 'Peter',
+     @LastName = 'Kerry',
+     @Position = 'banker',
+     @IsManagedBy = 'Ryan',
+     @PostalAddressCode = 'T2Q6M4'
+	PRINT 'Row was inserted';
+
+	EXEC PInsertTableEmployee
+     @StartDate = '2012-01-10',
+     @FirstName = 'Jelly',
+     @LastName = 'Horn',
+     @Position = 'banker',
+     @IsManagedBy = 'Ryan',
+     @PostalAddressCode = 'T2H6K4'
+	PRINT 'Row was inserted';
+
+	EXEC PInsertTableEmployee
+     @StartDate = '2014-01-10',
+     @FirstName = 'John',
+     @LastName = 'Smith',
+     @Position = 'banker',
+     @IsManagedBy = 'Ryan',
+     @PostalAddressCode = 'T2B2J9'
+	PRINT 'Row was inserted';
+
+	EXEC PInsertTableEmployee
+     @StartDate = '2013-01-10',
+     @FirstName = 'Anderson',
+     @LastName = 'Jayson',
+     @Position = 'loan officer',
+     @IsManagedBy = 'Ryan',
+     @PostalAddressCode = 'T2J6M4'
+	PRINT 'Row was inserted';
+
+	EXEC PInsertTableEmployee
+     @StartDate = '2018-04-23',
+     @FirstName = 'Sandeep',
+     @LastName = 'Saini',
+     @Position = 'banker',
+     @IsManagedBy = 'Ryan',
+     @PostalAddressCode = 'J2K6L4'
+	PRINT 'Row was inserted';
+
+	EXEC PInsertTableEmployee
+     @StartDate = '2017-01-10',
+     @FirstName = 'Karamullah',
+     @LastName = 'Agha',
+     @Position = 'banker',
+     @IsManagedBy = 'Ryan',
+     @PostalAddressCode = 'K2A6M4'
+	PRINT 'Row was inserted';
+
+	EXEC PInsertTableEmployee
+     @StartDate = '2015-08-23',
+     @FirstName = 'Brijesh',
+     @LastName = 'Patel',
+     @Position = 'loan officer',
+     @IsManagedBy = 'Ryan',
+     @PostalAddressCode = 'T9A6M8'
+	PRINT 'Row was inserted';
+
+	EXEC PInsertTableEmployee
+     @StartDate = '2016-03-17',
+     @FirstName = 'Pablo',
+     @LastName = 'Winter',
+     @Position = 'banker',
+     @IsManagedBy = 'Ryan',
+     @PostalAddressCode = 'T2Z6K4'
+	PRINT 'Row was inserted';
 
 -- Populate data TCustomer table
-INSERT INTO TCustomer (FirstName, LastName, HomeAdrress, PersonalRepresentative, LoanOfficer)
-VALUES('Phuong', 'Huynh', '1234 Anland St Calgary', Null, Null);
+	-- Create store procedure to insert data to customer table
+	IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PInsertTableCustomer'))
+ 	EXEC('CREATE PROCEDURE [PInsertTableCustomer] AS BEGIN SET NOCOUNT ON; END');
+	GO
 
-INSERT INTO TCustomer (FirstName, LastName, HomeAdrress, PersonalRepresentative, LoanOfficer)
-VALUES('Mary', 'Lany', '7654 Diamond St Toronto', Null, Null);
+	ALTER PROCEDURE [PInsertTableCustomer]
+	    @FirstName NVARCHAR(100) = NULL,
+	    @LastName NVARCHAR(100) = NULL,
+	    @HomeAdrress NVARCHAR(100) = NULL,
+        @PersonalRepresentative NVARCHAR(100) = NULL,
+        @LoanOfficer NVARCHAR(100) = NULL
 
-INSERT INTO TCustomer (FirstName, LastName, HomeAdrress, PersonalRepresentative, LoanOfficer)
-VALUES('Khalib', 'Harner', '8888 LeDuc St Vancouver', Null, 'Anderson');
+	AS
+	 
+	SET NOCOUNT ON;
+	SET XACT_ABORT ON;
 
-INSERT INTO TCustomer (FirstName, LastName, HomeAdrress, PersonalRepresentative, LoanOfficer)
-VALUES('Andy', 'Mac', '999 Ember St Edmonton', Null, Null);
+	    BEGIN
 
-INSERT INTO TCustomer (FirstName, LastName, HomeAdrress, PersonalRepresentative, LoanOfficer)
-VALUES('Klinger', 'Macor', '778 36 St Calgary', Null, Null);
+	        IF @FirstName IS NULL OR LEN(@FirstName) = 0
+	            THROW 50001, 'INVALID First Name', 1;
 
-INSERT INTO TCustomer (FirstName, LastName, HomeAdrress, PersonalRepresentative, LoanOfficer)
-VALUES('Andrew', 'Panel', '3456 68 St Toronto', 'Peter Jackson', 'Brijesh');
+	        IF @LastName IS NULL OR LEN(@LastName) = 0
+	            THROW 50001, 'INVALID Last Name', 1;
 
-INSERT INTO TCustomer (FirstName, LastName, HomeAdrress, PersonalRepresentative, LoanOfficer)
-VALUES('Yen', 'Nguyen', '456 BridgeLand St Edmonton', Null, 'Anderson');
+	        IF @HomeAdrress IS NULL OR LEN(@HomeAdrress) = 0
+	            THROW 50001, 'INVALID Home Address', 1;
 
-INSERT INTO TCustomer (FirstName, LastName, HomeAdrress, PersonalRepresentative, LoanOfficer)
-VALUES('Kim', 'Huynh', '1234 Anland St Calgary', Null, Null);
+	        INSERT INTO TCustomer (FirstName, LastName, HomeAdrress, PersonalRepresentative, LoanOfficer)
+	        VALUES(@FirstName, @LastName, @HomeAdrress, @PersonalRepresentative, @LoanOfficer)
 
-INSERT INTO TCustomer (FirstName, LastName, HomeAdrress, PersonalRepresentative, LoanOfficer)
-VALUES('Anh', 'Mach', '1234 Anland St Calgary', Null, Null);
+	    END 
+	GO
 
-INSERT INTO TCustomer (FirstName, LastName, HomeAdrress, PersonalRepresentative, LoanOfficer)
-VALUES('Ethan', 'Do', '789 Sundrige Ave Calgary', 'Mary Jane', Null);
-GO
+	-- EXEC SP insert Customer table
+		EXEC PInsertTableCustomer
+		    @FirstName = 'Phuong',
+		    @LastName = 'Huynh',
+		    @HomeAdrress = '1234 Anland St Calgary',
+		    @PersonalRepresentative = NULL,
+		    @LoanOfficer = NULL
+		PRINT 'Row was inserted';
+		GO
+
+		EXEC PInsertTableCustomer
+		    @FirstName = 'Mary',
+		    @LastName = 'Lany',
+		    @HomeAdrress = '7654 Diamond St Toronto',
+		    @PersonalRepresentative = NULL,
+		    @LoanOfficer = NULL
+		PRINT 'Row was inserted';
+		GO
+
+		EXEC PInsertTableCustomer
+		    @FirstName = 'Khalib',
+		    @LastName = 'Harner',
+		    @HomeAdrress = '8888 LeDuc St Vancouver',
+		    @PersonalRepresentative = NULL,
+		    @LoanOfficer = 'Anderson'
+		PRINT 'Row was inserted';
+		GO
+
+		EXEC PInsertTableCustomer
+		    @FirstName = 'Andy',
+		    @LastName = 'Mac',
+		    @HomeAdrress = '999 Ember St Edmonton',
+		    @PersonalRepresentative = NULL,
+		    @LoanOfficer = NULL
+		PRINT 'Row was inserted';
+		GO
+
+		EXEC PInsertTableCustomer
+		    @FirstName = 'Klinger',
+		    @LastName = 'Macor',
+		    @HomeAdrress = '778 36 St Calgary',
+		    @PersonalRepresentative = NULL,
+		    @LoanOfficer = NULL
+		PRINT 'Row was inserted';
+		GO
+
+		EXEC PInsertTableCustomer
+		    @FirstName = 'Andrew',
+		    @LastName = 'Panel',
+		    @HomeAdrress = '3456 68 St Toronto',
+		    @PersonalRepresentative = 'Peter Jackson',
+		    @LoanOfficer = 'Brijesh'
+		PRINT 'Row was inserted';
+		GO
+
+		EXEC PInsertTableCustomer
+		    @FirstName = 'Yen',
+		    @LastName = 'Nguyen',
+		    @HomeAdrress = '456 BridgeLand St Edmonton',
+		    @PersonalRepresentative = NULL,
+		    @LoanOfficer = 'Anderson'
+		PRINT 'Row was inserted';
+		GO
+
+		EXEC PInsertTableCustomer
+		    @FirstName = 'Kim',
+		    @LastName = 'Huynh',
+		    @HomeAdrress = '1234 Anland St Calgary',
+		    @PersonalRepresentative = NULL,
+		    @LoanOfficer = NULL
+		PRINT 'Row was inserted';
+		GO
+
+		EXEC PInsertTableCustomer
+		    @FirstName = 'Anh',
+		    @LastName = 'Mach',
+		    @HomeAdrress = '1234 Anland St Calgary',
+		    @PersonalRepresentative = NULL,
+		    @LoanOfficer = NULL
+		PRINT 'Row was inserted';
+		GO
+
+		EXEC PInsertTableCustomer
+		    @FirstName = 'Ethan',
+		    @LastName = 'Do',
+		    @HomeAdrress = '789 Sundrige Ave Calgary',
+		    @PersonalRepresentative = 'Mary Jane',
+		    @LoanOfficer = NULL
+		PRINT 'Row was inserted';
+		GO
 
 -- Populate data TAccount table
 INSERT INTO TAccount (AccountNumber, CustomerID, BranchID, CurrentBalance, Type,
