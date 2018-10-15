@@ -680,24 +680,84 @@ GO
 	GO
 
 -- Populate data TLoan table
-INSERT INTO TLoan (CustomerID, BranchID, Kind, Amount)
-VALUES(1, 2, 'student loan', 20000);
+	-- Create Store Procedure to insert data to TLoan table
+	IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PInsertTableLoan'))
+ 	EXEC('CREATE PROCEDURE [PInsertTableLoan] AS BEGIN SET NOCOUNT ON; END');
+	GO
 
-INSERT INTO TLoan (CustomerID, BranchID, Kind, Amount)
-VALUES(3, 4, 'business', 500000);
+	ALTER PROCEDURE [PInsertTableLoan]
+	    @CustomerID INT = NULL,
+        @BranchID INT = NULL,
+        @Kind NVARCHAR(100) = NULL,
+        @Amount MONEY = NULL
+	AS
+	 
+	SET NOCOUNT ON;
+	SET XACT_ABORT ON;
 
-INSERT INTO TLoan (CustomerID, BranchID, Kind, Amount)
-VALUES(6, 8, 'personal', 4000);
+	    BEGIN
 
-INSERT INTO TLoan (CustomerID, BranchID, Kind, Amount)
-VALUES(6, 7, 'student loan', 25000);
+            IF NOT EXISTS (SELECT * FROM TCustomer WHERE CustomerID = @CustomerID)
+                THROW 50001, 'INVALID CustomerID', 1;
 
-INSERT INTO TLoan (CustomerID, BranchID, Kind, Amount)
-VALUES(8, 1, 'business', 12000);
+            IF NOT EXISTS (SELECT * FROM TBranch WHERE BranchID = @BranchID)
+                THROW 50001, 'INVALID BranchID', 1;
 
-INSERT INTO TLoan (CustomerID, BranchID, Kind, Amount)
-VALUES(5, 3, 'personal', 4500);
-GO
+            IF @Kind IS NULL OR LEN(@Kind) = 0
+                THROW 50001, 'INVALID LOAN KIND', 1;
+
+            IF @Amount IS NULL OR @Amount <= 0
+                THROW 50001, 'INVALID LOAN AMOUNT', 1;
+	        
+
+	        INSERT INTO TLoan (CustomerID, BranchID, [Kind], Amount)
+	        VALUES(@CustomerID, @BranchID, @Kind, @Amount)
+
+	    END 
+	GO
+
+	-- EXEC SP insert Loan by adding data
+	EXEC PInsertTableLoan
+	    @CustomerID = 1,
+	    @BranchID = 2,
+	    @Kind = 'student loan',
+	    @Amount = 20000
+	GO
+
+	EXEC PInsertTableLoan
+	    @CustomerID = 3,
+	    @BranchID = 4,
+	    @Kind = 'business',
+	    @Amount = 500000
+	GO
+
+	EXEC PInsertTableLoan
+	    @CustomerID = 6,
+	    @BranchID = 8,
+	    @Kind = 'personal',
+	    @Amount = 4000
+	GO
+
+	EXEC PInsertTableLoan
+	    @CustomerID = 6,
+	    @BranchID = 7,
+	    @Kind = 'student loan',
+	    @Amount = 25000
+	GO
+
+	EXEC PInsertTableLoan
+	    @CustomerID = 8,
+	    @BranchID = 1,
+	    @Kind = 'business',
+	    @Amount = 12000
+	GO
+
+	EXEC PInsertTableLoan
+	    @CustomerID = 5,
+	    @BranchID = 3,
+	    @Kind = 'personal',
+	    @Amount = 4500
+	GO
 
 -- Populate data TLoanPaymemnt table
 INSERT INTO TLoanPayment (PaymentNumber, LoanID, MonthlyPaymentDate, Amount)
