@@ -384,46 +384,159 @@ GO
 		GO
 
 -- Populate data TAccount table
-INSERT INTO TAccount (AccountNumber, CustomerID, BranchID, CurrentBalance, Type,
-					  MinimumRequiredBalance, InterestRate, MonthlyServiceFee)
-VALUES(1001, 1, 1, 4090, 'checking', 500, 0.01, 0);
+	-- Create Store Procedure Insert to TAccount
+	IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PInsertTableAccount'))
+ 	EXEC('CREATE PROCEDURE [PInsertTableAccount] AS BEGIN SET NOCOUNT ON; END');
+	GO
 
-INSERT INTO TAccount (AccountNumber, CustomerID, BranchID, CurrentBalance, Type,
-					  MinimumRequiredBalance, InterestRate, MonthlyServiceFee)
-VALUES(1004, 1, 1, 560, 'saving', 500, 0.04, 0);
+	ALTER PROCEDURE [PInsertTableAccount]
+	    @AccountNumber INT = NULL,
 
-INSERT INTO TAccount (AccountNumber, CustomerID, BranchID, CurrentBalance, Type,
-					  MinimumRequiredBalance, InterestRate, MonthlyServiceFee)
-VALUES(1002, 2, 1, 300, 'saving', 500, 0.04, 25);
 
-INSERT INTO TAccount (AccountNumber, CustomerID, BranchID, CurrentBalance, Type,
-					  MinimumRequiredBalance, InterestRate, MonthlyServiceFee)
-VALUES(1003, 5, 2, 10200, 'checking', 500, 0.01, 0);
+        @CustomerID INT = NULL,
+        @BranchID INT = NULL,
+        @CurrentBalance MONEY = NULL,
+        @Type NVARCHAR(80) = NULL,
+        @DefaultMinRequiredBalance MONEY = 500,
+        @MinimumRequiredBalance MONEY = @DefaultMinRequiredBalance,
+        @InterestRate FLOAT = NULL,
+        @MonthlyServiceFee MONEY = NULL
+	AS
+	 
+	SET NOCOUNT ON;
+	SET XACT_ABORT ON;
 
-INSERT INTO TAccount (AccountNumber, CustomerID, BranchID, CurrentBalance, Type,
-					  MinimumRequiredBalance, InterestRate, MonthlyServiceFee)
-VALUES(1005, 4, 5, 20000, 'checking', 500, 0.01, 0);
+	    BEGIN
 
-INSERT INTO TAccount (AccountNumber, CustomerID, BranchID, CurrentBalance, Type,
-					  MinimumRequiredBalance, InterestRate, MonthlyServiceFee)
-VALUES(1006, 8, 8, 350, 'saving', 500, 0.04, 25);
+	        IF @AccountNumber IS NULL
+	            THROW 50001, 'INVALID Account number', 1;
 
-INSERT INTO TAccount (AccountNumber, CustomerID, BranchID, CurrentBalance, Type,
-					  MinimumRequiredBalance, InterestRate, MonthlyServiceFee)
-VALUES(1007, 10, 4, 2000, 'checking', 500, 0.01, 0);
+	        IF NOT EXISTS (SELECT * FROM TCustomer WHERE CustomerID = @CustomerID)
+	            THROW 50001, 'CustomerID cannot null', 1;
 
-INSERT INTO TAccount (AccountNumber, CustomerID, BranchID, CurrentBalance, Type,
-					  MinimumRequiredBalance, InterestRate, MonthlyServiceFee)
-VALUES(1008, 10, 4, 350, 'saving', 500, 0.04, 25);
+	        IF NOT EXISTS (SELECT * FROM TBranch WHERE BranchID = @BranchID)
+	            THROW 50001, 'BranchID cannot null', 1;
 
-INSERT INTO TAccount (AccountNumber, CustomerID, BranchID, CurrentBalance, Type,
-					  MinimumRequiredBalance, InterestRate, MonthlyServiceFee)
-VALUES(1009, 7, 3, 7500, 'checking', 500, 0.01, 0);
+            IF @CurrentBalance IS NULL OR @CurrentBalance < 0
+                THROW 50001, 'INVALID current balance', 1 ;
+            
+            IF @Type IS NULL OR LEN(@Type) = 0
+                THROW 50001, 'INVALID Account type', 1;
 
-INSERT INTO TAccount (AccountNumber, CustomerID, BranchID, CurrentBalance, Type,
-					  MinimumRequiredBalance, InterestRate, MonthlyServiceFee)
-VALUES(1010, 5, 7, 8600, 'saving', 500, 0.04, 0);
-GO
+            IF @Type = 'saving'
+                SET @InterestRate = 0.04;
+            
+            IF @Type = 'checking'
+                SET @InterestRate = 0.01;
+
+            IF @CurrentBalance < @MinimumRequiredBalance
+                SET @MonthlyServiceFee = 25
+            ELSE -- current balance is equal or greater than MinimumRequiredBalance
+                SET @MonthlyServiceFee = 0
+
+	        INSERT INTO TAccount (AccountNumber, CustomerID, BranchID, CurrentBalance, [Type], MinimumRequiredBalance, InterestRate, MonthlyServiceFee)
+	        VALUES(@AccountNumber, @CustomerID, @BranchID, @CurrentBalance, @Type, @MinimumRequiredBalance, @InterestRate, @MonthlyServiceFee)
+
+	    END 
+	GO
+
+
+	-- Execute SP insert TAccount 
+	EXEC PInsertTableAccount
+	    @AccountNumber = 1001,
+	    @CustomerID = 1, 
+	    @BranchID = 1,
+	    @CurrentBalance = 4090,
+	    @Type = 'checking'
+	PRINT 'A row was inserted.';
+	GO
+
+	EXEC PInsertTableAccount
+	    @AccountNumber = 1004,
+	    @CustomerID = 1, 
+	    @BranchID = 1,
+	    @CurrentBalance = 560,
+	    @Type = 'saving'
+	PRINT 'A row was inserted.';
+	GO
+
+	EXEC PInsertTableAccount
+	    @AccountNumber = 1002,
+	    @CustomerID = 2, 
+	    @BranchID = 1,
+	    @CurrentBalance = 300,
+	    @Type = 'saving'
+	PRINT 'A row was inserted.';
+	GO
+
+	EXEC PInsertTableAccount
+	    @AccountNumber = 1003,
+	    @CustomerID = 5, 
+	    @BranchID = 2,
+	    @CurrentBalance = 10200,
+	    @Type = 'checking'
+	PRINT 'A row was inserted.';
+	GO
+
+
+	EXEC PInsertTableAccount
+	    @AccountNumber = 1005,
+	    @CustomerID = 4, 
+	    @BranchID = 5,
+	    @CurrentBalance = 20000,
+	    @Type = 'checking'
+	PRINT 'A row was inserted.';
+	GO
+
+
+	EXEC PInsertTableAccount
+	    @AccountNumber = 1006,
+	    @CustomerID = 8, 
+	    @BranchID = 8,
+	    @CurrentBalance = 350,
+	    @Type = 'saving'
+	PRINT 'A row was inserted.';
+	GO
+
+
+	EXEC PInsertTableAccount
+	    @AccountNumber = 1007,
+	    @CustomerID = 10, 
+	    @BranchID = 4,
+	    @CurrentBalance = 2000,
+	    @Type = 'checking'
+	PRINT 'A row was inserted.';
+	GO
+
+
+	EXEC PInsertTableAccount
+	    @AccountNumber = 1008,
+	    @CustomerID = 10, 
+	    @BranchID = 4,
+	    @CurrentBalance = 350,
+	    @Type = 'saving'
+	PRINT 'A row was inserted.';
+	GO
+
+
+	EXEC PInsertTableAccount
+	    @AccountNumber = 1009,
+	    @CustomerID = 7, 
+	    @BranchID = 3,
+	    @CurrentBalance = 7500,
+	    @Type = 'checking'
+	PRINT 'A row was inserted.';
+	GO
+
+
+	EXEC PInsertTableAccount
+	    @AccountNumber = 1010,
+	    @CustomerID = 5, 
+	    @BranchID = 7,
+	    @CurrentBalance = 8600,
+	    @Type = 'saving'
+	PRINT 'A row was inserted.';
+	GO
 
 -- Populate data TTransaction table
 INSERT INTO TTransaction (AccountID, Amount, Type, TransactionDateTime, CheckNumber)

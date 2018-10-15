@@ -59,7 +59,7 @@ SET XACT_ABORT ON;
         
         CREATE TABLE TAccount (
             AccountID INT IDENTITY,
-            AccountNumber INT UNIQUE,
+            AccountNumber INT NOT NULL UNIQUE,
             CustomerID INT FOREIGN KEY REFERENCES TCustomer(CustomerID),
             BranchID INT FOREIGN KEY REFERENCES TBranch(BranchID),
             CurrentBalance MONEY NOT NULL DEFAULT 0,
