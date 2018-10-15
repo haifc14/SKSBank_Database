@@ -849,54 +849,116 @@ GO
 	GO
 
 -- Populate data TWorkingAt table
-INSERT INTO TWorkingAt (EmployeeID, BranchID)
-VALUES(1,1);
+	-- Create Store Procedure to insert to WorkingAt table
+	IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PInsertTableWorkingAt'))
+ 	EXEC('CREATE PROCEDURE [PInsertTableWorkingAt] AS BEGIN SET NOCOUNT ON; END');
+	GO
 
-INSERT INTO TWorkingAt (EmployeeID, BranchID)
-VALUES(1,6);
+	ALTER PROCEDURE [PInsertTableWorkingAt]
 
-INSERT INTO TWorkingAt (EmployeeID, BranchID)
-VALUES(2,3);
+	    @EmployeeID INT = NULL,
+        @BranchID INT = NULL
 
-INSERT INTO TWorkingAt (EmployeeID, BranchID)
-VALUES(2,9);
+	AS
+	 
+	SET NOCOUNT ON;
+	SET XACT_ABORT ON;
 
-INSERT INTO TWorkingAt (EmployeeID, BranchID)
-VALUES(3,4);
+	    BEGIN
 
-INSERT INTO TWorkingAt (EmployeeID, BranchID)
-VALUES(4,6);
+            IF NOT EXISTS (SELECT * FROM TEmployee WHERE EmployeeID = @EmployeeID)
+                THROW 50001, 'INVALID EMPLOYEE ID', 1;
 
-INSERT INTO TWorkingAt (EmployeeID, BranchID)
-VALUES(5,6);
+            IF NOT EXISTS (SELECT * FROM TBranch WHERE BranchID = @BranchID)
+                THROW 50001, 'INVALID BRANCH ID', 1;
 
-INSERT INTO TWorkingAt (EmployeeID, BranchID)
-VALUES(5,2);
+	        INSERT INTO TWorkingAt (EmployeeID, BranchID)
+	        VALUES(@EmployeeID, @BranchID)
 
-INSERT INTO TWorkingAt (EmployeeID, BranchID)
-VALUES(6,6);
+	    END 
+	GO
 
-INSERT INTO TWorkingAt (EmployeeID, BranchID)
-VALUES(7,3);
+	-- EXEC SP insert WorkingAt by adding data
+	EXEC PInsertTableWorkingAt
+	    @EmployeeID = 1,
+	    @BranchID = 1
+	GO
 
-INSERT INTO TWorkingAt (EmployeeID, BranchID)
-VALUES(8,6);
+	EXEC PInsertTableWorkingAt
+	    @EmployeeID = 1,
+	    @BranchID = 6
+	GO
 
-INSERT INTO TWorkingAt (EmployeeID, BranchID)
-VALUES(9,3);
+	EXEC PInsertTableWorkingAt
+	    @EmployeeID = 2,
+	    @BranchID = 3
+	GO
 
-INSERT INTO TWorkingAt (EmployeeID, BranchID)
-VALUES(10,6);
+	EXEC PInsertTableWorkingAt
+	    @EmployeeID = 2,
+	    @BranchID = 9
+	GO
 
-INSERT INTO TWorkingAt (EmployeeID, BranchID)
-VALUES(4,5);
+	EXEC PInsertTableWorkingAt
+	    @EmployeeID = 3,
+	    @BranchID = 4
+	GO
 
-INSERT INTO TWorkingAt (EmployeeID, BranchID)
-VALUES(7,7);
+	EXEC PInsertTableWorkingAt
+	    @EmployeeID = 4,
+	    @BranchID = 6
+	GO
 
-INSERT INTO TWorkingAt (EmployeeID, BranchID)
-VALUES(10,8);
-GO
+	EXEC PInsertTableWorkingAt
+	    @EmployeeID = 5,
+	    @BranchID = 6
+	GO
+
+	EXEC PInsertTableWorkingAt
+	    @EmployeeID = 5,
+	    @BranchID = 2
+	GO
+
+	EXEC PInsertTableWorkingAt
+	    @EmployeeID = 6,
+	    @BranchID = 6
+	GO
+
+	EXEC PInsertTableWorkingAt
+	    @EmployeeID = 7,
+	    @BranchID = 3
+	GO
+
+	EXEC PInsertTableWorkingAt
+	    @EmployeeID = 8,
+	    @BranchID = 6
+	GO
+
+	EXEC PInsertTableWorkingAt
+	    @EmployeeID = 9,
+	    @BranchID = 3
+	GO
+
+	EXEC PInsertTableWorkingAt
+	    @EmployeeID = 10,
+	    @BranchID = 6
+	GO
+
+	EXEC PInsertTableWorkingAt
+	    @EmployeeID = 4,
+	    @BranchID = 5
+	GO
+
+	EXEC PInsertTableWorkingAt
+	    @EmployeeID = 7,
+	    @BranchID = 7
+	GO
+
+	EXEC PInsertTableWorkingAt
+	    @EmployeeID = 10,
+	    @BranchID = 8
+	GO
+
 
 
 
