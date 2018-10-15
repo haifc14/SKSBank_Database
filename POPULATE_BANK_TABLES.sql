@@ -1,4 +1,6 @@
-USE hdo488 -- select database
+
+-- Select database
+USE hdo488
 GO
 
 -- Populate data to bank tables 
@@ -45,80 +47,70 @@ GO
          @BranchName = 'SKS_Branch01',
          @IsOffice = 0,
          @CityName = 'Calgary',
-         @PostalCode = 'T4A6M4';
-    PRINT 'Row was inserted.';
+         @PostalCode = 'T4A6M4'
     GO
 
 	EXEC PInsertTableBranch
          @BranchName = 'SKS_Branch08',
          @IsOffice = 0,
          @CityName = 'Toronto',
-         @PostalCode = 'T4A6M4';
-    PRINT 'Row was inserted.';
+         @PostalCode = 'T4A6M4'
     GO
 
     EXEC PInsertTableBranch
          @BranchName = 'SKS_Branch07',
          @IsOffice = 0,
          @CityName = 'Toronto',
-         @PostalCode = 'T2A6H4';
-    PRINT 'Row was inserted.';
+         @PostalCode = 'T2A6H4'
     GO
 
     EXEC PInsertTableBranch
          @BranchName = 'SKS_Branch06',
          @IsOffice = 0,
          @CityName = 'Edmonton',
-         @PostalCode = 'T8K6M4';
-    PRINT 'Row was inserted.';
+         @PostalCode = 'T8K6M4'
     GO
 
     EXEC PInsertTableBranch
          @BranchName = 'SKS_Branch05',
          @IsOffice = 0,
          @CityName = 'Edmonton',
-         @PostalCode = 'T2A6M4';
-    PRINT 'Row was inserted.';
+         @PostalCode = 'T2A6M4'
     GO
 
     EXEC PInsertTableBranch
          @BranchName = 'SKS_Office02',
          @IsOffice = 1,
          @CityName = 'Vancouver',
-         @PostalCode = 'T2J6M4';
-    PRINT 'Row was inserted.';
+         @PostalCode = 'T2J6M4'
     GO
 
     EXEC PInsertTableBranch
          @BranchName = 'SKS_Branch04',
          @IsOffice = 0,
          @CityName = 'Vancouver',
-         @PostalCode = 'P2A6M4';
-    PRINT 'Row was inserted.';
+         @PostalCode = 'P2A6M4'
     GO
 
     EXEC PInsertTableBranch
          @BranchName = 'SKS_Branch03',
          @IsOffice = 0,
          @CityName = 'Vancouver',
-         @PostalCode = 'K2A6M4';
-    PRINT 'Row was inserted.';
+         @PostalCode = 'K2A6M4'
     GO
 
     EXEC PInsertTableBranch
          @BranchName = 'SKS_Office01',
          @IsOffice = 1,
          @CityName = 'Calgary',
-         @PostalCode = 'B2A6M4';
-    PRINT 'Row was inserted.';
+         @PostalCode = 'B2A6M4'
     GO
 
     EXEC PInsertTableBranch
          @BranchName = 'SKS_Branch02',
          @IsOffice = 0,
          @CityName = 'Calgary',
-         @PostalCode = 'T2A6M4';
-    PRINT 'Row was inserted.';
+         @PostalCode = 'T2A6M4'
     GO
 
 -- Populate data TEmployee table
@@ -174,7 +166,7 @@ GO
 	 @Position = 'banker',
 	 @IsManagedBy = 'Ryan',
 	 @PostalAddressCode = 'T2A6M4'
-	PRINT 'Row was inserted';
+	GO
 
 	EXEC PInsertTableEmployee
      @StartDate = '2010-01-10',
@@ -183,7 +175,7 @@ GO
      @Position = 'manager',
      @IsManagedBy = 'higherboss',
      @PostalAddressCode = 'T2R6M4'
-	PRINT 'Row was inserted';
+	GO
 
 	EXEC PInsertTableEmployee
      @StartDate = '2016-01-10',
@@ -192,7 +184,7 @@ GO
      @Position = 'banker',
      @IsManagedBy = 'Ryan',
      @PostalAddressCode = 'T2Q6M4'
-	PRINT 'Row was inserted';
+	GO
 
 	EXEC PInsertTableEmployee
      @StartDate = '2012-01-10',
@@ -201,7 +193,7 @@ GO
      @Position = 'banker',
      @IsManagedBy = 'Ryan',
      @PostalAddressCode = 'T2H6K4'
-	PRINT 'Row was inserted';
+	GO
 
 	EXEC PInsertTableEmployee
      @StartDate = '2014-01-10',
@@ -210,7 +202,7 @@ GO
      @Position = 'banker',
      @IsManagedBy = 'Ryan',
      @PostalAddressCode = 'T2B2J9'
-	PRINT 'Row was inserted';
+	GO
 
 	EXEC PInsertTableEmployee
      @StartDate = '2013-01-10',
@@ -219,7 +211,7 @@ GO
      @Position = 'loan officer',
      @IsManagedBy = 'Ryan',
      @PostalAddressCode = 'T2J6M4'
-	PRINT 'Row was inserted';
+	GO
 
 	EXEC PInsertTableEmployee
      @StartDate = '2018-04-23',
@@ -228,7 +220,7 @@ GO
      @Position = 'banker',
      @IsManagedBy = 'Ryan',
      @PostalAddressCode = 'J2K6L4'
-	PRINT 'Row was inserted';
+	GO
 
 	EXEC PInsertTableEmployee
      @StartDate = '2017-01-10',
@@ -237,7 +229,7 @@ GO
      @Position = 'banker',
      @IsManagedBy = 'Ryan',
      @PostalAddressCode = 'K2A6M4'
-	PRINT 'Row was inserted';
+	GO
 
 	EXEC PInsertTableEmployee
      @StartDate = '2015-08-23',
@@ -246,7 +238,7 @@ GO
      @Position = 'loan officer',
      @IsManagedBy = 'Ryan',
      @PostalAddressCode = 'T9A6M8'
-	PRINT 'Row was inserted';
+	GO
 
 	EXEC PInsertTableEmployee
      @StartDate = '2016-03-17',
@@ -255,7 +247,7 @@ GO
      @Position = 'banker',
      @IsManagedBy = 'Ryan',
      @PostalAddressCode = 'T2Z6K4'
-	PRINT 'Row was inserted';
+	GO
 
 -- Populate data TCustomer table
 	-- Create store procedure to insert data to customer table
@@ -299,7 +291,6 @@ GO
 		    @HomeAdrress = '1234 Anland St Calgary',
 		    @PersonalRepresentative = NULL,
 		    @LoanOfficer = NULL
-		PRINT 'Row was inserted';
 		GO
 
 		EXEC PInsertTableCustomer
@@ -308,7 +299,6 @@ GO
 		    @HomeAdrress = '7654 Diamond St Toronto',
 		    @PersonalRepresentative = NULL,
 		    @LoanOfficer = NULL
-		PRINT 'Row was inserted';
 		GO
 
 		EXEC PInsertTableCustomer
@@ -317,7 +307,6 @@ GO
 		    @HomeAdrress = '8888 LeDuc St Vancouver',
 		    @PersonalRepresentative = NULL,
 		    @LoanOfficer = 'Anderson'
-		PRINT 'Row was inserted';
 		GO
 
 		EXEC PInsertTableCustomer
@@ -326,7 +315,6 @@ GO
 		    @HomeAdrress = '999 Ember St Edmonton',
 		    @PersonalRepresentative = NULL,
 		    @LoanOfficer = NULL
-		PRINT 'Row was inserted';
 		GO
 
 		EXEC PInsertTableCustomer
@@ -335,7 +323,6 @@ GO
 		    @HomeAdrress = '778 36 St Calgary',
 		    @PersonalRepresentative = NULL,
 		    @LoanOfficer = NULL
-		PRINT 'Row was inserted';
 		GO
 
 		EXEC PInsertTableCustomer
@@ -344,7 +331,6 @@ GO
 		    @HomeAdrress = '3456 68 St Toronto',
 		    @PersonalRepresentative = 'Peter Jackson',
 		    @LoanOfficer = 'Brijesh'
-		PRINT 'Row was inserted';
 		GO
 
 		EXEC PInsertTableCustomer
@@ -353,7 +339,6 @@ GO
 		    @HomeAdrress = '456 BridgeLand St Edmonton',
 		    @PersonalRepresentative = NULL,
 		    @LoanOfficer = 'Anderson'
-		PRINT 'Row was inserted';
 		GO
 
 		EXEC PInsertTableCustomer
@@ -362,7 +347,6 @@ GO
 		    @HomeAdrress = '1234 Anland St Calgary',
 		    @PersonalRepresentative = NULL,
 		    @LoanOfficer = NULL
-		PRINT 'Row was inserted';
 		GO
 
 		EXEC PInsertTableCustomer
@@ -371,7 +355,6 @@ GO
 		    @HomeAdrress = '1234 Anland St Calgary',
 		    @PersonalRepresentative = NULL,
 		    @LoanOfficer = NULL
-		PRINT 'Row was inserted';
 		GO
 
 		EXEC PInsertTableCustomer
@@ -380,7 +363,6 @@ GO
 		    @HomeAdrress = '789 Sundrige Ave Calgary',
 		    @PersonalRepresentative = 'Mary Jane',
 		    @LoanOfficer = NULL
-		PRINT 'Row was inserted';
 		GO
 
 -- Populate data TAccount table
@@ -390,9 +372,8 @@ GO
 	GO
 
 	ALTER PROCEDURE [PInsertTableAccount]
+
 	    @AccountNumber INT = NULL,
-
-
         @CustomerID INT = NULL,
         @BranchID INT = NULL,
         @CurrentBalance MONEY = NULL,
@@ -401,6 +382,7 @@ GO
         @MinimumRequiredBalance MONEY = @DefaultMinRequiredBalance,
         @InterestRate FLOAT = NULL,
         @MonthlyServiceFee MONEY = NULL
+
 	AS
 	 
 	SET NOCOUNT ON;
@@ -448,7 +430,6 @@ GO
 	    @BranchID = 1,
 	    @CurrentBalance = 4090,
 	    @Type = 'checking'
-	PRINT 'A row was inserted.';
 	GO
 
 	EXEC PInsertTableAccount
@@ -457,7 +438,6 @@ GO
 	    @BranchID = 1,
 	    @CurrentBalance = 560,
 	    @Type = 'saving'
-	PRINT 'A row was inserted.';
 	GO
 
 	EXEC PInsertTableAccount
@@ -466,7 +446,6 @@ GO
 	    @BranchID = 1,
 	    @CurrentBalance = 300,
 	    @Type = 'saving'
-	PRINT 'A row was inserted.';
 	GO
 
 	EXEC PInsertTableAccount
@@ -475,7 +454,6 @@ GO
 	    @BranchID = 2,
 	    @CurrentBalance = 10200,
 	    @Type = 'checking'
-	PRINT 'A row was inserted.';
 	GO
 
 
@@ -485,7 +463,6 @@ GO
 	    @BranchID = 5,
 	    @CurrentBalance = 20000,
 	    @Type = 'checking'
-	PRINT 'A row was inserted.';
 	GO
 
 
@@ -495,7 +472,6 @@ GO
 	    @BranchID = 8,
 	    @CurrentBalance = 350,
 	    @Type = 'saving'
-	PRINT 'A row was inserted.';
 	GO
 
 
@@ -505,7 +481,6 @@ GO
 	    @BranchID = 4,
 	    @CurrentBalance = 2000,
 	    @Type = 'checking'
-	PRINT 'A row was inserted.';
 	GO
 
 
@@ -515,7 +490,6 @@ GO
 	    @BranchID = 4,
 	    @CurrentBalance = 350,
 	    @Type = 'saving'
-	PRINT 'A row was inserted.';
 	GO
 
 
@@ -525,7 +499,6 @@ GO
 	    @BranchID = 3,
 	    @CurrentBalance = 7500,
 	    @Type = 'checking'
-	PRINT 'A row was inserted.';
 	GO
 
 
@@ -535,7 +508,6 @@ GO
 	    @BranchID = 7,
 	    @CurrentBalance = 8600,
 	    @Type = 'saving'
-	PRINT 'A row was inserted.';
 	GO
 
 -- Populate data TTransaction table
@@ -545,6 +517,7 @@ GO
 	GO
 
 	ALTER PROCEDURE [PInsertTableTransaction]
+
 	    @AccountID INT = NULL,
         @Amount MONEY = NULL,
         @Type NVARCHAR(100) = NULL,
@@ -552,6 +525,7 @@ GO
         @CheckNumber INT = NULL,
         @AccountType NVARCHAR(80) = '',
         @CurrentBalanceInAccount MONEY = 0
+        
 	AS
 	 
 	SET NOCOUNT ON;
@@ -566,21 +540,25 @@ GO
                 THROW 50001, 'INVALID transaction amount', 1;
 
             IF @Type = 'withdraw'
-                -- if amount in transaction of withdraw > current balance => throw exception
-                SET @CurrentBalanceInAccount = (SELECT CurrentBalance FROM TAccount WHERE AccountID = @AccountID)
-                IF @Amount > @CurrentBalanceInAccount
-                    THROW 50001, 'Transaction amount of withdraw cannot over the current balance in account', 1;
+                BEGIN
+                    -- if amount in transaction of withdraw > current balance => throw exception
+                    SET @CurrentBalanceInAccount = (SELECT CurrentBalance FROM TAccount WHERE AccountID = @AccountID)
+                    IF @Amount > @CurrentBalanceInAccount
+                        THROW 50001, 'Transaction amount of withdraw cannot over the current balance in account', 1;
+                END
 
             IF @Type IS NULL OR LEN(@Type) = 0
                 THROW 50001, 'INVALID Transaction Type', 1;
 
             IF @Type = 'withdraw'
-                SET @AccountType = (SELECT [Type] FROM TAccount WHERE AccountID = @AccountID)
-                IF @AccountType = 'checking' AND @CheckNumber IS NULL
-                    -- if account type is checking and transaction action is withdraw
-                    -- AND Checknumber is null -> throw exception
-                    THROW 50001, 'Checknumber cannot be null with typre withdraw of checking account', 1;
-                    
+                BEGIN
+                    SET @AccountType = (SELECT [Type] FROM TAccount WHERE AccountID = @AccountID)
+                    IF @AccountType = 'checking' AND @CheckNumber IS NULL
+                        -- if account type is checking and transaction action is withdraw
+                        -- AND Checknumber is null -> throw exception
+                        THROW 50001, 'Checknumber cannot be null with typre withdraw of checking account', 1;
+                END
+
             IF @TransactionDateTime IS NULL OR @TransactionDateTime > GETDATE()
                 THROW 50001, 'INVALID Transaction datetime', 1;
 
