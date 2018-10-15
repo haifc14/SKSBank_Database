@@ -260,7 +260,8 @@ GO
 	    @LastName NVARCHAR(100) = NULL,
 	    @HomeAdrress NVARCHAR(100) = NULL,
         @PersonalRepresentative NVARCHAR(100) = NULL,
-        @LoanOfficer NVARCHAR(100) = NULL
+        @LoanOfficerID INT = NULL,
+        @EmployeePosition NVARCHAR(100) = NULL
 
 	AS
 	 
@@ -278,8 +279,17 @@ GO
 	        IF @HomeAdrress IS NULL OR LEN(@HomeAdrress) = 0
 	            THROW 50001, 'INVALID Home Address', 1;
 
-	        INSERT INTO TCustomer (FirstName, LastName, HomeAdrress, PersonalRepresentative, LoanOfficer)
-	        VALUES(@FirstName, @LastName, @HomeAdrress, @PersonalRepresentative, @LoanOfficer)
+	        IF @LoanOfficerID IS NOT NULL AND (NOT EXISTS (SELECT * FROM TEmployee WHERE EmployeeID = @LoanOfficerID))
+	        	THROW 50001, 'INVALID Loanofficer ID', 1;
+	        ELSE -- LoanofficerID was found in Employee table
+	        	BEGIN
+	        		SET @EmployeePosition = (SELECT Position FROM TEmployee WHERE EmployeeID = @LoanOfficerID)
+	        		IF @EmployeePosition != 'loan officer'
+	        			THROW 50001, 'INVALID LoanOfficerID', 1;
+	        	END
+
+	        INSERT INTO TCustomer (FirstName, LastName, HomeAdrress, PersonalRepresentative, LoanOfficerID)
+	        VALUES(@FirstName, @LastName, @HomeAdrress, @PersonalRepresentative, @LoanOfficerID)
 
 	    END 
 	GO
@@ -290,7 +300,7 @@ GO
 		    @LastName = 'Huynh',
 		    @HomeAdrress = '1234 Anland St Calgary',
 		    @PersonalRepresentative = NULL,
-		    @LoanOfficer = NULL
+		    @LoanOfficerID = NULL
 		GO
 
 		EXEC PInsertTableCustomer
@@ -298,7 +308,7 @@ GO
 		    @LastName = 'Lany',
 		    @HomeAdrress = '7654 Diamond St Toronto',
 		    @PersonalRepresentative = NULL,
-		    @LoanOfficer = NULL
+		    @LoanOfficerID = NULL
 		GO
 
 		EXEC PInsertTableCustomer
@@ -306,7 +316,7 @@ GO
 		    @LastName = 'Harner',
 		    @HomeAdrress = '8888 LeDuc St Vancouver',
 		    @PersonalRepresentative = NULL,
-		    @LoanOfficer = 'Anderson'
+		    @LoanOfficerID = 6
 		GO
 
 		EXEC PInsertTableCustomer
@@ -314,7 +324,7 @@ GO
 		    @LastName = 'Mac',
 		    @HomeAdrress = '999 Ember St Edmonton',
 		    @PersonalRepresentative = NULL,
-		    @LoanOfficer = NULL
+		    @LoanOfficerID = NULL
 		GO
 
 		EXEC PInsertTableCustomer
@@ -322,7 +332,7 @@ GO
 		    @LastName = 'Macor',
 		    @HomeAdrress = '778 36 St Calgary',
 		    @PersonalRepresentative = NULL,
-		    @LoanOfficer = NULL
+		    @LoanOfficerID = NULL
 		GO
 
 		EXEC PInsertTableCustomer
@@ -330,7 +340,7 @@ GO
 		    @LastName = 'Panel',
 		    @HomeAdrress = '3456 68 St Toronto',
 		    @PersonalRepresentative = 'Peter Jackson',
-		    @LoanOfficer = 'Brijesh'
+		    @LoanOfficerID = 9
 		GO
 
 		EXEC PInsertTableCustomer
@@ -338,7 +348,7 @@ GO
 		    @LastName = 'Nguyen',
 		    @HomeAdrress = '456 BridgeLand St Edmonton',
 		    @PersonalRepresentative = NULL,
-		    @LoanOfficer = 'Anderson'
+		    @LoanOfficerID = 6
 		GO
 
 		EXEC PInsertTableCustomer
@@ -346,7 +356,7 @@ GO
 		    @LastName = 'Huynh',
 		    @HomeAdrress = '1234 Anland St Calgary',
 		    @PersonalRepresentative = NULL,
-		    @LoanOfficer = NULL
+		    @LoanOfficerID = NULL
 		GO
 
 		EXEC PInsertTableCustomer
@@ -354,7 +364,7 @@ GO
 		    @LastName = 'Mach',
 		    @HomeAdrress = '1234 Anland St Calgary',
 		    @PersonalRepresentative = NULL,
-		    @LoanOfficer = NULL
+		    @LoanOfficerID = NULL
 		GO
 
 		EXEC PInsertTableCustomer
@@ -362,7 +372,7 @@ GO
 		    @LastName = 'Do',
 		    @HomeAdrress = '789 Sundrige Ave Calgary',
 		    @PersonalRepresentative = 'Mary Jane',
-		    @LoanOfficer = NULL
+		    @LoanOfficerID = NULL
 		GO
 
 -- Populate data TAccount table

@@ -53,7 +53,7 @@ SET XACT_ABORT ON;
             LastName NVARCHAR(100) NOT NULL,
             HomeAdrress NVARCHAR(100) NOT NULL,
             PersonalRepresentative NVARCHAR(100),
-            LoanOfficer NVARCHAR(100), -- To know who is loan officer of customer
+            LoanOfficerID INT FOREIGN KEY REFERENCES TEmployee(EmployeeID), -- To know who is loan officer of customer
             CONSTRAINT PK_Customer PRIMARY KEY (CustomerID)
         )
         
