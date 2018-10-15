@@ -42,6 +42,39 @@ SET @ServiceFee = 25
 EXEC PApplyServiceCharge @AccountType = @AccType ,
                           @DefinedServiceFee = @ServiceFee;
 GO
+ 
+SELECT * FROM TAccount -- testing the current balance is updated
+GO
+
+-- Question 3
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PShowAccountsBelowMinimumBalance'))
+ 	EXEC('CREATE PROCEDURE [PShowAccountsBelowMinimumBalance] AS BEGIN SET NOCOUNT ON; END');
+	GO
+
+	ALTER PROCEDURE [PShowAccountsBelowMinimumBalance]
+	    
+	AS
+	 
+	SET NOCOUNT ON;
+	SET XACT_ABORT ON;
+
+	    BEGIN
+
+	        SELECT  TCustomer.CustomerID, TCustomer.FirstName + ' ' + TCustomer.LastName AS 'Customer Name',
+                    TAccount.AccountNumber, TAccount.[Type], TAccount.MinimumRequiredBalance,
+                    TAccount.CurrentBalance, TAccount.MonthlyServiceFee
+            FROM TAccount JOIN TCustomer
+            ON TAccount.CustomerID = TCustomer.CustomerID
+            WHERE TAccount.CurrentBalance < TAccount.MinimumRequiredBalance
+
+	    END 
+	GO
+
+EXEC PShowAccountsBelowMinimumBalance
+GO
+
+-- Question 4
+
 
 
 -- Question 6
