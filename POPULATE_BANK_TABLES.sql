@@ -539,36 +539,145 @@ GO
 	GO
 
 -- Populate data TTransaction table
-INSERT INTO TTransaction (AccountID, Amount, Type, TransactionDateTime, CheckNumber)
-VALUES(1, 250, 'deposit', '2014-04-27 07:39:06', Null);
+	-- Create Store procedure InsertTransaction
+	IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PInsertTableTransaction'))
+ 	EXEC('CREATE PROCEDURE [PInsertTableTransaction] AS BEGIN SET NOCOUNT ON; END');
+	GO
 
-INSERT INTO TTransaction (AccountID, Amount, Type, TransactionDateTime, CheckNumber)
-VALUES(2, 200, 'withdraw', '2015-04-19 09:25:16', Null);
+	ALTER PROCEDURE [PInsertTableTransaction]
+	    @AccountID INT = NULL,
+        @Amount MONEY = NULL,
+        @Type NVARCHAR(100) = NULL,
+        @TransactionDateTime DATETIME2 = NULL,
+        @CheckNumber INT = NULL,
+        @AccountType NVARCHAR(80) = '',
+        @CurrentBalanceInAccount MONEY = 0
+	AS
+	 
+	SET NOCOUNT ON;
+	SET XACT_ABORT ON;
 
-INSERT INTO TTransaction (AccountID, Amount, Type, TransactionDateTime, CheckNumber)
-VALUES(2, 700, 'deposit', '2015-04-27 10:25:16', Null);
+	    BEGIN
 
-INSERT INTO TTransaction (AccountID, Amount, Type, TransactionDateTime, CheckNumber)
-VALUES(4, 500, 'withdraw', '2017-05-10 04:25:16', 12567);
+	        IF NOT EXISTS (SELECT * FROM TAccount WHERE AccountID = @AccountID)
+                THROW 50001, 'INVALID AccountID', 1;
 
-INSERT INTO TTransaction (AccountID, Amount, Type, TransactionDateTime, CheckNumber)
-VALUES(7, 1000, 'deposit', '2016-04-26 07:30:36', Null);
+            IF @Amount IS NULL OR @Amount < 0
+                THROW 50001, 'INVALID transaction amount', 1;
 
-INSERT INTO TTransaction (AccountID, Amount, Type, TransactionDateTime, CheckNumber)
-VALUES(8, 200, 'deposit', '2018-04-19 01:25:16', Null);
+            IF @Type = 'withdraw'
+                -- if amount in transaction of withdraw > current balance => throw exception
+                SET @CurrentBalanceInAccount = (SELECT CurrentBalance FROM TAccount WHERE AccountID = @AccountID)
+                IF @Amount > @CurrentBalanceInAccount
+                    THROW 50001, 'Transaction amount of withdraw cannot over the current balance in account', 1;
 
-INSERT INTO TTransaction (AccountID, Amount, Type, TransactionDateTime, CheckNumber)
-VALUES(5, 7000, 'withdraw', '2015-04-19 09:25:16', 7878);
+            IF @Type IS NULL OR LEN(@Type) = 0
+                THROW 50001, 'INVALID Transaction Type', 1;
 
-INSERT INTO TTransaction (AccountID, Amount, Type, TransactionDateTime, CheckNumber)
-VALUES(2, 200, 'withdraw', '2015-04-19 09:25:16', Null);
+            IF @Type = 'withdraw'
+                SET @AccountType = (SELECT [Type] FROM TAccount WHERE AccountID = @AccountID)
+                IF @AccountType = 'checking' AND @CheckNumber IS NULL
+                    -- if account type is checking and transaction action is withdraw
+                    -- AND Checknumber is null -> throw exception
+                    THROW 50001, 'Checknumber cannot be null with typre withdraw of checking account', 1;
+                    
+            IF @TransactionDateTime IS NULL OR @TransactionDateTime > GETDATE()
+                THROW 50001, 'INVALID Transaction datetime', 1;
 
-INSERT INTO TTransaction (AccountID, Amount, Type, TransactionDateTime, CheckNumber)
-VALUES(10, 550, 'deposit', '2013-07-19 08:25:16', Null);
+	        INSERT INTO TTransaction (AccountID, Amount, [Type], TransactionDateTime, CheckNumber)
+	        VALUES(@AccountID, @Amount, @Type, @TransactionDateTime, @CheckNumber)
 
-INSERT INTO TTransaction (AccountID, Amount, Type, TransactionDateTime, CheckNumber)
-VALUES(10, 5000, 'withdraw', '2014-07-19 08:25:16', Null);
-GO
+	    END 
+	GO
+
+	-- Exec SP insert TTransaction by adding data
+	EXEC PInsertTableTransaction
+	    @AccountID = 1,
+	    @Amount = 250,
+	    @Type = 'deposit',
+	    @TransactionDateTime = '2014-04-27 07:39:06',
+	    @CheckNumber = NULL
+	GO
+
+	EXEC PInsertTableTransaction
+	    @AccountID = 2,
+	    @Amount = 200,
+	    @Type = 'withdraw',
+	    @TransactionDateTime = '2015-04-19 09:25:16',
+	    @CheckNumber = NULL
+	GO
+
+	EXEC PInsertTableTransaction
+	    @AccountID = 2,
+	    @Amount = 700,
+	    @Type = 'deposit',
+	    @TransactionDateTime = '2015-04-27 10:25:16',
+	    @CheckNumber = NULL
+	GO
+
+	EXEC PInsertTableTransaction
+	    @AccountID = 4,
+	    @Amount = 500,
+	    @Type = 'withdraw',
+	    @TransactionDateTime = '2017-05-10 04:25:16',
+	    @CheckNumber = 12567
+	GO
+
+	EXEC PInsertTableTransaction
+	    @AccountID = 7,
+	    @Amount = 1000,
+	    @Type = 'deposit',
+	    @TransactionDateTime = '2016-04-26 07:30:36',
+	    @CheckNumber = NULL
+	GO
+
+	EXEC PInsertTableTransaction
+	    @AccountID = 8,
+	    @Amount = 200,
+	    @Type = 'deposit',
+	    @TransactionDateTime = '2018-04-19 01:25:16',
+	    @CheckNumber = NULL
+	GO
+
+	EXEC PInsertTableTransaction
+	    @AccountID = 5,
+	    @Amount = 7000,
+	    @Type = 'withdraw',
+	    @TransactionDateTime = '2015-04-19 09:25:16',
+	    @CheckNumber = 7878
+	GO
+
+	EXEC PInsertTableTransaction
+	    @AccountID = 2,
+	    @Amount = 200,
+	    @Type = 'withdraw',
+	    @TransactionDateTime = '2015-04-19 09:25:16',
+	    @CheckNumber = NULL
+	GO
+
+	EXEC PInsertTableTransaction
+	    @AccountID = 10,
+	    @Amount = 550,
+	    @Type = 'deposit',
+	    @TransactionDateTime = '2013-07-19 08:25:16',
+	    @CheckNumber = NULL
+	GO
+
+	EXEC PInsertTableTransaction
+	    @AccountID = 10,
+	    @Amount = 5000,
+	    @Type = 'withdraw',
+	    @TransactionDateTime = '2014-07-19 08:25:16',
+	    @CheckNumber = NULL
+	GO
+
+	EXEC PInsertTableTransaction
+	    @AccountID = 9,
+	    @Amount = 7000,
+	    @Type = 'withdraw',
+	    @TransactionDateTime = '2014-07-19 08:25:16',
+	    @CheckNumber = 9999
+	GO
 
 -- Populate data TLoan table
 INSERT INTO TLoan (CustomerID, BranchID, Kind, Amount)
