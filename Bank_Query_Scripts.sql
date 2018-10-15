@@ -7,11 +7,11 @@ GO
 
 
 -- Question 2
-IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PApplyServiceCharge'))
- 	EXEC('CREATE PROCEDURE [PApplyServiceCharge] AS BEGIN SET NOCOUNT ON; END');
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PAddServiceCharge'))
+ 	EXEC('CREATE PROCEDURE [PAddServiceCharge] AS BEGIN SET NOCOUNT ON; END');
 	GO
 
-	ALTER PROCEDURE [PApplyServiceCharge]
+	ALTER PROCEDURE [PAddServiceCharge]
 
 	    @AccountType NVARCHAR(100),
         @DefinedServiceFee MONEY
@@ -23,7 +23,7 @@ IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT
 	    BEGIN TRY
 
            UPDATE TAccount 
-           SET CurrentBalance = CurrentBalance - @DefinedServiceFee
+           SET MonthlyServiceFee = @DefinedServiceFee
            WHERE TAccount.[Type] = @AccountType
        
 	    END TRY
@@ -39,7 +39,7 @@ IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT
 DECLARE @AccType NVARCHAR(100), @ServiceFee MONEY
 SET @AccType = 'checking'
 SET @ServiceFee = 25
-EXEC PApplyServiceCharge @AccountType = @AccType ,
+EXEC PAddServiceCharge @AccountType = @AccType ,
                           @DefinedServiceFee = @ServiceFee;
 GO
  
@@ -47,11 +47,11 @@ SELECT * FROM TAccount -- testing the current balance is updated
 GO
 
 -- Question 3
-IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PShowAccountsBelowMinimumBalance'))
- 	EXEC('CREATE PROCEDURE [PShowAccountsBelowMinimumBalance] AS BEGIN SET NOCOUNT ON; END');
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PListAccountsBelowMinimumBalance'))
+ 	EXEC('CREATE PROCEDURE [PListAccountsBelowMinimumBalance] AS BEGIN SET NOCOUNT ON; END');
 	GO
 
-	ALTER PROCEDURE [PShowAccountsBelowMinimumBalance]
+	ALTER PROCEDURE [PListAccountsBelowMinimumBalance]
 	    
 	AS
 	 
@@ -70,12 +70,69 @@ IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT
 	    END 
 	GO
 
-EXEC PShowAccountsBelowMinimumBalance
+EXEC PListAccountsBelowMinimumBalance
 GO
 
 -- Question 4
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PApplyInterestCredits'))
+ 	EXEC('CREATE PROCEDURE [PApplyInterestCredits] AS BEGIN SET NOCOUNT ON; END');
+	GO
+
+	ALTER PROCEDURE [PApplyInterestCredits]
+	    
+	AS
+	 
+	SET NOCOUNT ON;
+	SET XACT_ABORT ON;
+
+	    BEGIN
+
+	        UPDATE TAccount
+            SET CurrentBalance = CurrentBalance + (CurrentBalance * InterestRate)
+
+	    END 
+	GO
+
+EXEC PApplyInterestCredits
+GO
+
+SELECT * FROM TAccount -- testing the current balance is updated
+GO
+
+-- Question 5
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PApplyServiceCharge'))
+ 	EXEC('CREATE PROCEDURE [PApplyServiceCharge] AS BEGIN SET NOCOUNT ON; END');
+	GO
+
+	ALTER PROCEDURE [PApplyServiceCharge]
+
+	
+	AS
+	 
+	SET NOCOUNT ON;
+	SET XACT_ABORT ON;
+
+	    BEGIN TRY
+
+            UPDATE TAccount 
+            SET CurrentBalance = CurrentBalance - MonthlyServiceFee
+            WHERE CurrentBalance < MinimumRequiredBalance
+           
+	    END TRY
+
+        BEGIN CATCH
+
+            PRINT('The update Service charged is failed');
+
+        END CATCH
+	GO
 
 
+EXEC PApplyServiceCharge
+GO
+
+SELECT * FROM TAccount -- testing the current balance is updated
+GO
 
 -- Question 6
 DELETE FROM TCustomer 
