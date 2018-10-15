@@ -760,27 +760,93 @@ GO
 	GO
 
 -- Populate data TLoanPaymemnt table
-INSERT INTO TLoanPayment (PaymentNumber, LoanID, MonthlyPaymentDate, Amount)
-VALUES(7888, 1, '2016-01-10', 300);
+	-- Create Store Procedure to insert data to TLoanPayment table
+	IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PInsertTableLoanPayment'))
+ 	EXEC('CREATE PROCEDURE [PInsertTableLoanPayment] AS BEGIN SET NOCOUNT ON; END');
+	GO
 
-INSERT INTO TLoanPayment (PaymentNumber, LoanID, MonthlyPaymentDate, Amount)
-VALUES(7889, 1, '2016-02-10', 440);
+	ALTER PROCEDURE [PInsertTableLoanPayment]
+	    @PaymentNumber INT = NULL,
+        @LoanID INT = NULL,
+        @MonthlyPaymentDate DATE = NULL,
+        @Amount MONEY = NULL,
+        @CurrentLoanAmount MONEY = NULL
+	AS
+	 
+	SET NOCOUNT ON;
+	SET XACT_ABORT ON;
 
-INSERT INTO TLoanPayment (PaymentNumber, LoanID, MonthlyPaymentDate, Amount)
-VALUES(7888, 2, '2017-03-15', 1700);
+	    BEGIN
 
-INSERT INTO TLoanPayment (PaymentNumber, LoanID, MonthlyPaymentDate, Amount)
-VALUES(7889, 2, '2017-04-15', 6000);
+            IF @PaymentNumber IS NULL
+                THROW 50001, 'INVALID PAYMENT NUMBER', 1;
 
-INSERT INTO TLoanPayment (PaymentNumber, LoanID, MonthlyPaymentDate, Amount)
-VALUES(7998, 3, '2018-08-20', 2000);
+            IF NOT EXISTS (SELECT * FROM TLoan WHERE LoanID = @LoanID)
+                THROW 50001, 'INVALID LOANID', 1;
 
-INSERT INTO TLoanPayment (PaymentNumber, LoanID, MonthlyPaymentDate, Amount)
-VALUES(7999, 3, '2018-09-20', 2000);
+            IF @MonthlyPaymentDate IS NULL OR @MonthlyPaymentDate > GETDATE()
+                THROW 50001, 'INVALID MonthlyPaymentDate', 1;
 
-INSERT INTO TLoanPayment (PaymentNumber, LoanID, MonthlyPaymentDate, Amount)
-VALUES(7999, 5, '2014-04-17', 4500);
-GO
+            SET @CurrentLoanAmount = (SELECT Amount FROM TLoan WHERE LoanID = @LoanID)
+
+            IF @Amount IS NULL OR ( @Amount <= 0 OR @Amount > @CurrentLoanAmount )
+                THROW 50001, 'INVALID LOAN PAYMENT AMOUNT', 1;
+
+	        INSERT INTO TLoanPayment (PaymentNumber, LoanID, MonthlyPaymentDate, Amount)
+	        VALUES(@PaymentNumber, @LoanID, @MonthlyPaymentDate, @Amount)
+
+	    END 
+	GO
+
+	-- EXEC SP Insert Tloanpayment by adding data
+	EXEC PInsertTableLoanPayment
+	    @PaymentNumber = 7888,
+	    @LoanID = 1,
+	    @MonthlyPaymentDate = '2016-01-10',
+	    @Amount = 300
+	GO
+
+	EXEC PInsertTableLoanPayment
+	    @PaymentNumber = 7889,
+	    @LoanID = 1,
+	    @MonthlyPaymentDate = '2016-02-10',
+	    @Amount = 440
+	GO
+
+	EXEC PInsertTableLoanPayment
+	    @PaymentNumber = 7888,
+	    @LoanID = 2,
+	    @MonthlyPaymentDate = '2017-03-15',
+	    @Amount = 1700
+	GO
+
+	EXEC PInsertTableLoanPayment
+	    @PaymentNumber = 7889,
+	    @LoanID = 2,
+	    @MonthlyPaymentDate = '2017-04-15',
+	    @Amount = 6000
+	GO
+
+	EXEC PInsertTableLoanPayment
+	    @PaymentNumber = 7998,
+	    @LoanID = 3,
+	    @MonthlyPaymentDate = '2018-08-20',
+	    @Amount = 2000
+	GO
+
+	EXEC PInsertTableLoanPayment
+	    @PaymentNumber = 7999,
+	    @LoanID = 3,
+	    @MonthlyPaymentDate = '2018-09-20',
+	    @Amount = 2000
+	GO
+
+	EXEC PInsertTableLoanPayment
+	    @PaymentNumber = 7999,
+	    @LoanID = 5,
+	    @MonthlyPaymentDate = '2014-04-17',
+	    @Amount = 4500
+	GO
 
 -- Populate data TWorkingAt table
 INSERT INTO TWorkingAt (EmployeeID, BranchID)
