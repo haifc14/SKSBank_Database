@@ -569,7 +569,7 @@ GO
                         THROW 50001, 'Checknumber cannot be null with typre withdraw of checking account', 1;
                 END
 
-            IF @TransactionDateTime IS NULL OR @TransactionDateTime > GETDATE()
+            IF @TransactionDateTime IS NULL
                 THROW 50001, 'INVALID Transaction datetime', 1;
 
 	        INSERT INTO TTransaction (AccountID, Amount, [Type], TransactionDateTime, CheckNumber)

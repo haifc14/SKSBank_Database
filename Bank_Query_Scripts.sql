@@ -23,7 +23,7 @@ IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT
 	    BEGIN TRY
 
            UPDATE TAccount 
-           SET MonthlyServiceFee = @DefinedServiceFee
+           SET CurrentBalance = CurrentBalance - @DefinedServiceFee
            WHERE TAccount.[Type] = @AccountType
        
 	    END TRY
@@ -73,71 +73,180 @@ IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT
 EXEC PListAccountsBelowMinimumBalance
 GO
 
--- Question 4
+
+-- Question 4 
 IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PApplyInterestCredits'))
  	EXEC('CREATE PROCEDURE [PApplyInterestCredits] AS BEGIN SET NOCOUNT ON; END');
-	GO
-
-	ALTER PROCEDURE [PApplyInterestCredits]
-	    
-	AS
-	 
-	SET NOCOUNT ON;
-	SET XACT_ABORT ON;
-
-	    BEGIN
-
-	        UPDATE TAccount
-            SET CurrentBalance = CurrentBalance + (CurrentBalance * InterestRate)
-
-	    END 
-	GO
-
-EXEC PApplyInterestCredits
 GO
+
+ALTER PROCEDURE [PApplyInterestCredits]
+    
+AS
+    
+SET NOCOUNT ON;
+SET XACT_ABORT ON;
+
+BEGIN
+
+    DECLARE @AccountID INT, @CurrentBalance MONEY, @InterestRate FLOAT;
+
+    DECLARE ApplyInterest_Cursor CURSOR 
+    FOR
+        SELECT AccountID, CurrentBalance, InterestRate
+        FROM TAccount;
+    
+    OPEN ApplyInterest_Cursor;
+
+    FETCH NEXT FROM ApplyInterest_Cursor INTO @AccountID, @CurrentBalance, @InterestRate;
+    
+    WHILE @@FETCH_STATUS <> -1
+
+        BEGIN
+            
+            DECLARE @InterestAmount MONEY;
+            SET @InterestAmount = @CurrentBalance * @InterestRate;
+
+            DECLARE @TransAddingTime DATETIME2;
+            SET @TransAddingTime = SYSDATETIME();
+
+            EXEC PInsertTableTransaction
+                @AccountID = @AccountID,
+                @Amount = @InterestAmount,
+                @Type = 'deposit',
+                @TransactionDateTime = @TransAddingTime,
+                @CheckNumber = NULL;
+
+            UPDATE TAccount 
+            SET CurrentBalance = CurrentBalance + (@CurrentBalance * @InterestRate)
+            WHERE AccountID = @AccountID;            
+            
+            FETCH NEXT FROM ApplyInterest_Cursor INTO  @AccountID, @CurrentBalance, @InterestRate;
+
+        END;
+        
+    CLOSE ApplyInterest_Cursor;
+
+    DEALLOCATE ApplyInterest_Cursor;
+
+END
+GO
+
+EXEC PApplyInterestCredits;
 
 SELECT * FROM TAccount -- testing the current balance is updated
+SELECT * FROM TTransaction -- testing the rows are added 
 GO
+
 
 -- Question 5
 IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PApplyServiceCharge'))
  	EXEC('CREATE PROCEDURE [PApplyServiceCharge] AS BEGIN SET NOCOUNT ON; END');
-	GO
+GO
 
-	ALTER PROCEDURE [PApplyServiceCharge]
+ALTER PROCEDURE [PApplyServiceCharge]
+    
+AS
+    
+SET NOCOUNT ON;
+SET XACT_ABORT ON;
 
-	
-	AS
-	 
-	SET NOCOUNT ON;
-	SET XACT_ABORT ON;
+BEGIN
 
-	    BEGIN TRY
+    DECLARE @AccountID INT, @AccountType NVARCHAR(80), @CurrentBalance MONEY, @MinimumRequiredBalance MONEY, @ServiceFee MONEY;
 
-            UPDATE TAccount 
-            SET CurrentBalance = CurrentBalance - MonthlyServiceFee
-            WHERE CurrentBalance < MinimumRequiredBalance
-           
-	    END TRY
+    DECLARE ApplyServiceCharge_Cursor CURSOR 
+    FOR
+        SELECT AccountID, [Type] ,CurrentBalance, MinimumRequiredBalance, MonthlyServiceFee
+        FROM TAccount;
+    
+    OPEN ApplyServiceCharge_Cursor;
 
-        BEGIN CATCH
+    FETCH NEXT FROM ApplyServiceCharge_Cursor INTO @AccountID, @AccountType, @CurrentBalance, @MinimumRequiredBalance, @ServiceFee;
+    
+    WHILE @@FETCH_STATUS <> -1
 
-            PRINT('The update Service charged is failed');
+        BEGIN
+            
+            -- get the server cuurent time
+            DECLARE @TransactionDateTime DATETIME2;
+            SET @TransactionDateTime = SYSDATETIME();
 
-        END CATCH
-	GO
+            -- check number for checking account type
+            DECLARE @CheckNumber INT;
+            SET @CheckNumber = 6767;
 
+            -- new balance after being deducted
+            DECLARE @UpdatedBalance MONEY;
+            SET @UpdatedBalance = @CurrentBalance - @ServiceFee;
+            
+            IF @CurrentBalance < @MinimumRequiredBalance
+
+                BEGIN
+
+                    IF @AccountType = 'checking'
+
+                        BEGIN
+
+                            EXEC PInsertTableTransaction
+                                @AccountID = @AccountID,
+                                @Amount = @ServiceFee,
+                                @Type = 'withdraw',
+                                @TransactionDateTime = @TransactionDateTime,
+                                @CheckNumber = @CheckNumber;
+
+                            UPDATE TAccount 
+                            SET CurrentBalance = @UpdatedBalance
+                            WHERE AccountID = @AccountID;            
+
+                        END
+
+                    ELSE -- Account type is not checking
+
+                        BEGIN
+
+                            EXEC PInsertTableTransaction
+                                @AccountID = @AccountID,
+                                @Amount = @ServiceFee,
+                                @Type = 'withdraw',
+                                @TransactionDateTime = @TransactionDateTime,
+                                @CheckNumber = NULL;
+
+                            UPDATE TAccount 
+                            SET CurrentBalance = @UpdatedBalance
+                            WHERE AccountID = @AccountID;  
+
+                        END
+
+                END
+
+            Set @CheckNumber = @CheckNumber + 100;
+                      
+            FETCH NEXT FROM ApplyServiceCharge_Cursor INTO @AccountID, @AccountType, @CurrentBalance, @MinimumRequiredBalance, @ServiceFee;
+
+        END;
+        
+    CLOSE ApplyServiceCharge_Cursor;
+
+    DEALLOCATE ApplyServiceCharge_Cursor;
+
+END
+GO
 
 EXEC PApplyServiceCharge
 GO
 
 SELECT * FROM TAccount -- testing the current balance is updated
+SELECT * FROM TTransaction -- testing the rows are added 
 GO
 
 -- Question 6
 DELETE FROM TCustomer 
 WHERE CustomerID = 3
 GO
+
+-- Question 7 
+
+
 
 -- Question 8
 SELECT TBranch.Name, TCustomer.FirstName + ' ' + TCustomer.LastName AS 'Customer FullName', 
