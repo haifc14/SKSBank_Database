@@ -244,9 +244,123 @@ DELETE FROM TCustomer
 WHERE CustomerID = 3
 GO
 
--- Question 7 
+-- Question 7 need to fix
 
+IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PWithdrawLoanPayment'))
+ 	EXEC('CREATE PROCEDURE [PWithdrawLoanPayment] AS BEGIN SET NOCOUNT ON; END');
+GO
 
+ALTER PROCEDURE [PWithdrawLoanPayment]
+    
+AS
+    
+SET NOCOUNT ON;
+SET XACT_ABORT ON;
+
+BEGIN
+
+   DECLARE @CustomerID INT, @LoanID INT, @LoanAmount MONEY, @MonthlyPaymentDate DATE, @MonthlyPayAmount MONEY;
+
+    DECLARE WithdrawLoanPayment_Cursor CURSOR 
+    FOR
+        SELECT TCustomer.CustomerID, TLoan.LoanID, TLoan.Amount AS 'Loan amount', 
+               TLoanPayment.MonthlyPaymentDate, TLoanPayment.Amount AS 'Monthly pay amount'
+        FROM TLoan JOIN TLoanPayment ON TLoan.LoanID = TLoanPayment.LoanID
+                   JOIN TCustomer ON TLoan.CustomerID = TCustomer.CustomerID
+    
+    OPEN WithdrawLoanPayment_Cursor;
+
+    FETCH NEXT FROM WithdrawLoanPayment_Cursor INTO @CustomerID, @LoanID, @LoanAmount, @MonthlyPaymentDate, @MonthlyPayAmount ;
+    
+    WHILE @@FETCH_STATUS <> -1
+
+        BEGIN
+            
+            -- GET AccountID from CustomerID
+            DECLARE @AccountID INT;
+            SET @AccountID = (SELECT AccountID FROM TAccount WHERE TAccount.CustomerID = @CustomerID);
+
+            -- Get AccounType from AccountID
+            DECLARE @AccountType NVARCHAR(80);
+            SET @AccountType = (SELECT TOP 1([Type]) FROM TAccount WHERE TAccount.CustomerID = @CustomerID);
+
+            -- Get Current date to compare with LoanPayment date
+            DECLARE @CurrentDate DATE;
+            SET @CurrentDate = (SELECT FORMAT(GetDate(), 'yyyy-MM-dd'));
+
+            -- Get current server time to insert transaction
+            DECLARE @currentServerTime DATETIME2;
+            SET @currentServerTime = SYSDATETIME();
+
+            -- Declare check number for checking account
+            DECLARE @CheckNumber INT;
+            SET @CheckNumber = 9967;
+
+            IF @CurrentDate = @MonthlyPaymentDate
+
+                BEGIN
+
+                    IF @AccountType = 'checking'
+
+                        BEGIN
+
+                            EXEC PInsertTableTransaction
+                                @AccountID = @AccountID,
+                                @Amount = @MonthlyPayAmount,
+                                @Type = 'withdraw',
+                                @TransactionDateTime = @currentServerTime,
+                                @CheckNumber = @CheckNumber;
+
+                            
+                            UPDATE TAccount
+                            SET CurrentBalance = CurrentBalance - @MonthlyPayAmount
+                            WHERE AccountID  = @AccountID;
+
+                            UPDATE TLoan
+                            SET Amount = Amount - @MonthlyPayAmount
+                            WHERE LoanID = @LoanID;
+
+                        END
+
+                    ELSE -- account type is not checking
+
+                        BEGIN
+
+                            EXEC PInsertTableTransaction
+                                @AccountID = @AccountID,
+                                @Amount = @MonthlyPayAmount,
+                                @Type = 'withdraw',
+                                @TransactionDateTime = @currentServerTime,
+                                @CheckNumber = NULL;
+
+                            
+                            UPDATE TAccount
+                            SET CurrentBalance = CurrentBalance - @MonthlyPayAmount
+                            WHERE AccountID  = @AccountID;
+
+                            UPDATE TLoan
+                            SET Amount = Amount - @MonthlyPayAmount
+                            WHERE LoanID = @LoanID;
+
+                        END
+
+                END
+
+                SET @CheckNumber = @CheckNumber + 100;
+                      
+            FETCH NEXT FROM WithdrawLoanPayment_Cursor INTO @CustomerID, @LoanID, @LoanAmount, @MonthlyPaymentDate, @MonthlyPayAmount ;
+
+        END;
+        
+    CLOSE WithdrawLoanPayment_Cursor;
+
+    DEALLOCATE WithdrawLoanPayment_Cursor;
+
+END
+
+GO
+
+EXEC PWithdrawLoanPayment;
 
 -- Question 8
 SELECT TBranch.Name, TCustomer.FirstName + ' ' + TCustomer.LastName AS 'Customer FullName', 
