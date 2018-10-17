@@ -4,6 +4,78 @@ GO
 --Question1."LIST BRANCH SUMMARY" Display a summary row for each bank branch showing the name, 
 -- postal address (as one field), number of accounts, number of loans, total account balance
 -- total loan balance , and average transaction amount against savings or checking accounts
+-- Branch and Accounts
+IF NOT EXISTS (SELECT *
+FROM sys.objects
+WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PListBranchSummary'))
+ 	EXEC('CREATE PROCEDURE [PListBranchSummary] AS BEGIN SET NOCOUNT ON; END');
+	GO
+
+ALTER PROCEDURE [PListBranchSummary]
+
+AS
+	 
+	SET NOCOUNT ON;
+	SET XACT_ABORT ON;
+
+    BEGIN
+
+    -- Branch and Accounts
+    SELECT Branch.Name , Branch.PostalCode, BA.NumberOfAccounts, BA.TotalBalance,
+        LA.NumberOfLoans, LA.TotalLoansBalance, ACT.AverageCheckingTransaction,
+        AST.AverageSavingTransaction
+
+    FROM TBranch AS Branch
+
+        LEFT JOIN
+        ( 
+            SELECT TBranch.Name, SUM(TAccount.CurrentBalance) AS 'TotalBalance',
+            COUNT(*) AS 'NumberOfAccounts'
+        FROM TBranch JOIN TAccount
+            ON TBranch.BranchID = TAccount.BranchID
+        GROUP BY TBranch.Name 
+            ) AS BA -- for Branch and Account
+
+        ON BA.Name = Branch.Name
+
+        LEFT JOIN
+        ( 
+            SELECT TBranch.Name, SUM(TLoan.Amount) AS 'TotalLoansBalance',
+            COUNT(*) AS 'NumberOfLoans'
+        FROM TBranch JOIN TLoan
+            ON TBranch.BranchID = TLoan.BranchID
+        GROUP BY TBranch.Name 
+            ) AS LA -- for Loan and Account
+
+        ON LA.Name = Branch.Name
+
+        LEFT JOIN
+        (
+            SELECT TBranch.Name, AVG(TTransaction.Amount) AS 'AverageCheckingTransaction'
+        FROM TAccount JOIN TTransaction ON TAccount.AccountID = TTransaction.AccountID
+            JOIN TBranch ON TAccount.BranchID = TBranch.BranchID
+        WHERE TAccount.[Type] LIKE 'checking'
+        GROUP BY TBranch.Name
+        ) AS ACT -- Average Checking Transaction
+
+        ON ACT.Name = Branch.Name
+
+        LEFT JOIN
+        (
+            SELECT TBranch.Name, AVG(TTransaction.Amount) AS 'AverageSavingTransaction'
+        FROM TAccount JOIN TTransaction ON TAccount.AccountID = TTransaction.AccountID
+            JOIN TBranch ON TAccount.BranchID = TBranch.BranchID
+        WHERE TAccount.[Type] LIKE 'saving'
+        GROUP BY TBranch.Name
+        ) AS AST -- Average Saving Transaction
+
+        ON AST.Name = Branch.Name
+
+    END
+
+EXEC PListBranchSummary;
+
+
 
 
 -- Question 2
@@ -114,11 +186,7 @@ BEGIN
                 @Amount = @InterestAmount,
                 @Type = 'deposit',
                 @TransactionDateTime = @TransAddingTime,
-                @CheckNumber = NULL;
-
-            UPDATE TAccount 
-            SET CurrentBalance = CurrentBalance + (@CurrentBalance * @InterestRate)
-            WHERE AccountID = @AccountID;            
+                @CheckNumber = NULL;   
             
             FETCH NEXT FROM ApplyInterest_Cursor INTO  @AccountID, @CurrentBalance, @InterestRate;
 
@@ -174,10 +242,6 @@ BEGIN
             -- check number for checking account type
             DECLARE @CheckNumber INT;
             SET @CheckNumber = 6767;
-
-            -- new balance after being deducted
-            DECLARE @UpdatedBalance MONEY;
-            SET @UpdatedBalance = @CurrentBalance - @ServiceFee;
             
             IF @CurrentBalance < @MinimumRequiredBalance
 
@@ -192,11 +256,7 @@ BEGIN
                                 @Amount = @ServiceFee,
                                 @Type = 'withdraw',
                                 @TransactionDateTime = @TransactionDateTime,
-                                @CheckNumber = @CheckNumber;
-
-                            UPDATE TAccount 
-                            SET CurrentBalance = @UpdatedBalance
-                            WHERE AccountID = @AccountID;            
+                                @CheckNumber = @CheckNumber;  
 
                         END
 
@@ -211,12 +271,7 @@ BEGIN
                                 @TransactionDateTime = @TransactionDateTime,
                                 @CheckNumber = NULL;
 
-                            UPDATE TAccount 
-                            SET CurrentBalance = @UpdatedBalance
-                            WHERE AccountID = @AccountID;  
-
                         END
-
                 END
 
             Set @CheckNumber = @CheckNumber + 100;
@@ -240,9 +295,28 @@ SELECT * FROM TTransaction -- testing the rows are added
 GO
 
 -- Question 6
-DELETE FROM TCustomer 
-WHERE CustomerID = 3
+IF NOT EXISTS (SELECT *
+FROM sys.objects
+WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PDeleteCustomerTest'))
+ 	EXEC('CREATE PROCEDURE [PDeleteCustomerTest] AS BEGIN SET NOCOUNT ON; END');
 GO
+
+ALTER PROCEDURE [PDeleteCustomerTest]
+    @CustomerID INT
+
+AS
+    
+SET NOCOUNT ON;
+SET XACT_ABORT ON;
+
+BEGIN
+
+    DELETE FROM TCustomer
+    WHERE CustomerID = @CustomerID;
+
+END
+
+EXEC PDeleteCustomerTest @CustomerID = 5;
 
 -- Question 7 need to fix
 
