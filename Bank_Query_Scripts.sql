@@ -317,123 +317,166 @@ END
 
 EXEC PDeleteCustomerTest @CustomerID = 5;
 
--- Question 7 need to fix
 
-IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PWithdrawLoanPayment'))
+
+-- Question 7 need to fix
+IF NOT EXISTS (SELECT *
+FROM sys.objects
+WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PWithdrawLoanPayment'))
  	EXEC('CREATE PROCEDURE [PWithdrawLoanPayment] AS BEGIN SET NOCOUNT ON; END');
 GO
 
 ALTER PROCEDURE [PWithdrawLoanPayment]
-    
+
 AS
     
 SET NOCOUNT ON;
 SET XACT_ABORT ON;
 
-BEGIN
+BEGIN TRANSACTION 
 
-   DECLARE @CustomerID INT, @LoanID INT, @LoanAmount MONEY, @MonthlyPaymentDate DATE, @MonthlyPayAmount MONEY;
+    BEGIN TRY
 
-    DECLARE WithdrawLoanPayment_Cursor CURSOR 
-    FOR
-        SELECT TCustomer.CustomerID, TLoan.LoanID, TLoan.Amount AS 'Loan amount', 
-               TLoanPayment.MonthlyPaymentDate, TLoanPayment.Amount AS 'Monthly pay amount'
-        FROM TLoan JOIN TLoanPayment ON TLoan.LoanID = TLoanPayment.LoanID
-                   JOIN TCustomer ON TLoan.CustomerID = TCustomer.CustomerID
-    
-    OPEN WithdrawLoanPayment_Cursor;
+        DECLARE @CustomerID INT, @LoanID INT, @LoanAmount MONEY, @MonthlyPaymentDate DATE, @MonthlyPayAmount MONEY;
 
-    FETCH NEXT FROM WithdrawLoanPayment_Cursor INTO @CustomerID, @LoanID, @LoanAmount, @MonthlyPaymentDate, @MonthlyPayAmount ;
-    
-    WHILE @@FETCH_STATUS <> -1
+        DECLARE WithdrawLoanPayment_Cursor CURSOR 
+        FOR
+            SELECT TCustomer.CustomerID, TLoan.LoanID, TLoan.Amount AS 'Loan amount',
+                   TLoanPayment.MonthlyPaymentDate, TLoanPayment.Amount AS 'Monthly pay amount'
+            FROM TLoan JOIN TLoanPayment ON TLoan.LoanID = TLoanPayment.LoanID
+            JOIN TCustomer ON TLoan.CustomerID = TCustomer.CustomerID
+        
+        OPEN WithdrawLoanPayment_Cursor;
 
-        BEGIN
-            
-            -- GET AccountID from CustomerID
-            DECLARE @AccountID INT;
-            SET @AccountID = (SELECT AccountID FROM TAccount WHERE TAccount.CustomerID = @CustomerID);
+        FETCH NEXT FROM WithdrawLoanPayment_Cursor INTO @CustomerID, @LoanID, @LoanAmount, @MonthlyPaymentDate, @MonthlyPayAmount ;
+        
+        WHILE @@FETCH_STATUS <> -1
 
-            -- Get AccounType from AccountID
-            DECLARE @AccountType NVARCHAR(80);
-            SET @AccountType = (SELECT TOP 1([Type]) FROM TAccount WHERE TAccount.CustomerID = @CustomerID);
+            BEGIN
 
-            -- Get Current date to compare with LoanPayment date
-            DECLARE @CurrentDate DATE;
-            SET @CurrentDate = (SELECT FORMAT(GetDate(), 'yyyy-MM-dd'));
+                -- GET AccountID from CustomerID
+                -- get checking account if customer has two account
+                -- otherwise get the current account of customer
+                DECLARE @AccountID INT;
 
-            -- Get current server time to insert transaction
-            DECLARE @currentServerTime DATETIME2;
-            SET @currentServerTime = SYSDATETIME();
+                DECLARE @NumberOfAccountsForEachCustomer INT;
 
-            -- Declare check number for checking account
-            DECLARE @CheckNumber INT;
-            SET @CheckNumber = 9967;
+                SET @NumberOfAccountsForEachCustomer = 
+                    (SELECT COUNT(AccountID) 
+                     FROM TAccount
+                     WHERE TAccount.CustomerID = @CustomerID);
 
-            IF @CurrentDate = @MonthlyPaymentDate
+                IF @NumberOfAccountsForEachCustomer IS NULL
+                    THROW 50001, 'Can not auto pay loan because customer does not have account in the bank', 1;
 
-                BEGIN
+                IF @NumberOfAccountsForEachCustomer = 1
+                                -- Number of account of customer is one
+                                -- pick the current account to pay
+                                SET @AccountID = 
+                                    (SELECT AccountID
+                                     FROM TAccount
+                                     WHERE TAccount.CustomerID = @CustomerID)
+                                            
+                ELSE -- Number of account of customer is more than one
+                    -- pick the checking account to pay by default
+                    SET @AccountID = (SELECT AccountID
+                                      FROM TAccount
+                                      WHERE TAccount.CustomerID = @CustomerID AND [Type] LIKE 'checking');
 
-                    IF @AccountType = 'checking'
+                -- Get AccounType from AccountID
+                DECLARE @AccountType NVARCHAR(80);
+                SET @AccountType = (SELECT [Type]
+                                    FROM TAccount
+                                    WHERE AccountID = @AccountID);
 
-                        BEGIN
+                -- Get Current date to compare with LoanPayment date
+                DECLARE @CurrentDate DATE;
+                SET @CurrentDate = GETDATE();
 
-                            EXEC PInsertTableTransaction
+                -- Get the month of current date
+                DECLARE @CurrentMonth INT;
+                SET @CurrentMonth = MONTH(@CurrentDate);
+
+                -- Get the day of current date
+                DECLARE @CurrentDay INT;
+                SET @CurrentDay = DAY(@CurrentDate);
+
+                -- Get current server time to insert transaction
+                DECLARE @currentServerTime DATETIME2;
+                SET @currentServerTime = SYSDATETIME();
+
+                -- Declare check number for checking account
+                DECLARE @CheckNumber INT;
+                SET @CheckNumber = 9967;
+
+                IF @CurrentMonth = MONTH(@MonthlyPaymentDate) AND @CurrentDay = DAY(@MonthlyPaymentDate)
+
+                    BEGIN
+
+                        IF @AccountType = 'checking'
+
+                            BEGIN
+
+                                EXEC PInsertTableTransaction
                                 @AccountID = @AccountID,
                                 @Amount = @MonthlyPayAmount,
                                 @Type = 'withdraw',
                                 @TransactionDateTime = @currentServerTime,
                                 @CheckNumber = @CheckNumber;
 
-                            
-                            UPDATE TAccount
-                            SET CurrentBalance = CurrentBalance - @MonthlyPayAmount
-                            WHERE AccountID  = @AccountID;
+                                UPDATE TLoan
+                                SET Amount = Amount - @MonthlyPayAmount
+                                WHERE LoanID = @LoanID;
 
-                            UPDATE TLoan
-                            SET Amount = Amount - @MonthlyPayAmount
-                            WHERE LoanID = @LoanID;
+                            END
 
-                        END
+                        ELSE -- account type is not checking
 
-                    ELSE -- account type is not checking
+                            BEGIN
 
-                        BEGIN
-
-                            EXEC PInsertTableTransaction
+                                EXEC PInsertTableTransaction
                                 @AccountID = @AccountID,
                                 @Amount = @MonthlyPayAmount,
                                 @Type = 'withdraw',
                                 @TransactionDateTime = @currentServerTime,
                                 @CheckNumber = NULL;
 
-                            
-                            UPDATE TAccount
-                            SET CurrentBalance = CurrentBalance - @MonthlyPayAmount
-                            WHERE AccountID  = @AccountID;
+                                UPDATE TLoan
+                                SET Amount = Amount - @MonthlyPayAmount
+                                WHERE LoanID = @LoanID;
 
-                            UPDATE TLoan
-                            SET Amount = Amount - @MonthlyPayAmount
-                            WHERE LoanID = @LoanID;
+                            END
 
-                        END
-
-                END
+                    END
 
                 SET @CheckNumber = @CheckNumber + 100;
-                      
-            FETCH NEXT FROM WithdrawLoanPayment_Cursor INTO @CustomerID, @LoanID, @LoanAmount, @MonthlyPaymentDate, @MonthlyPayAmount ;
 
-        END;
+                FETCH NEXT FROM WithdrawLoanPayment_Cursor INTO @CustomerID, @LoanID, @LoanAmount, @MonthlyPaymentDate, @MonthlyPayAmount ;
+
+            END;
+            
+        CLOSE WithdrawLoanPayment_Cursor;
+
+        DEALLOCATE WithdrawLoanPayment_Cursor;
+
+        COMMIT TRANSACTION
         
-    CLOSE WithdrawLoanPayment_Cursor;
+        PRINT('Transaction of auto pay loan is successful');
 
-    DEALLOCATE WithdrawLoanPayment_Cursor;
+    END TRY
 
-END
+    BEGIN CATCH
+
+        ROLLBACK TRANSACTION
+
+        PRINT('Transaction of auto pay loan is failed');
+
+    END CATCH
 
 GO
 
 EXEC PWithdrawLoanPayment;
+
 
 -- Question 8 LIST ACCOUNTS
 IF NOT EXISTS (SELECT *
