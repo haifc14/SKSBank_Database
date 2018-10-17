@@ -319,7 +319,7 @@ EXEC PDeleteCustomerTest @CustomerID = 5;
 
 
 
--- Question 7 need to fix
+-- Question 7 Widthdraw Loan Payment
 IF NOT EXISTS (SELECT *
 FROM sys.objects
 WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PWithdrawLoanPayment'))
@@ -510,3 +510,17 @@ BEGIN
 END
 
 EXEC PListAccounts
+
+
+-- REFERENCES
+
+-- Murach SQL SERVER
+-- 2016 page 464-469
+
+-- https:
+-- //stackoverflow.com/questions/17908776/sql-server-does-newid-always-gives-a-unique-id
+
+
+-- Murach SQL SERVER 2016 page 428-429
+
+-- https://stackoverflow.com/questions/18851734/getting-only-day-and-month-from-a-date-field
