@@ -31,10 +31,10 @@ AS
         ( 
             SELECT TBranch.Name, SUM(TAccount.CurrentBalance) AS 'TotalBalance',
             COUNT(*) AS 'NumberOfAccounts'
-        FROM TBranch JOIN TAccount
+            FROM TBranch JOIN TAccount
             ON TBranch.BranchID = TAccount.BranchID
-        GROUP BY TBranch.Name 
-            ) AS BA -- for Branch and Account
+            GROUP BY TBranch.Name 
+        ) AS BA -- for Branch and Account
 
         ON BA.Name = Branch.Name
 
@@ -42,20 +42,20 @@ AS
         ( 
             SELECT TBranch.Name, SUM(TLoan.Amount) AS 'TotalLoansBalance',
             COUNT(*) AS 'NumberOfLoans'
-        FROM TBranch JOIN TLoan
+            FROM TBranch JOIN TLoan
             ON TBranch.BranchID = TLoan.BranchID
-        GROUP BY TBranch.Name 
-            ) AS LA -- for Loan and Account
+            GROUP BY TBranch.Name 
+        ) AS LA -- for Loan and Account
 
         ON LA.Name = Branch.Name
 
         LEFT JOIN
         (
             SELECT TBranch.Name, AVG(TTransaction.Amount) AS 'AverageCheckingTransaction'
-        FROM TAccount JOIN TTransaction ON TAccount.AccountID = TTransaction.AccountID
+            FROM TAccount JOIN TTransaction ON TAccount.AccountID = TTransaction.AccountID
             JOIN TBranch ON TAccount.BranchID = TBranch.BranchID
-        WHERE TAccount.[Type] LIKE 'checking'
-        GROUP BY TBranch.Name
+            WHERE TAccount.[Type] LIKE 'checking'
+            GROUP BY TBranch.Name
         ) AS ACT -- Average Checking Transaction
 
         ON ACT.Name = Branch.Name
@@ -63,14 +63,13 @@ AS
         LEFT JOIN
         (
             SELECT TBranch.Name, AVG(TTransaction.Amount) AS 'AverageSavingTransaction'
-        FROM TAccount JOIN TTransaction ON TAccount.AccountID = TTransaction.AccountID
+            FROM TAccount JOIN TTransaction ON TAccount.AccountID = TTransaction.AccountID
             JOIN TBranch ON TAccount.BranchID = TBranch.BranchID
-        WHERE TAccount.[Type] LIKE 'saving'
-        GROUP BY TBranch.Name
+            WHERE TAccount.[Type] LIKE 'saving'
+            GROUP BY TBranch.Name
         ) AS AST -- Average Saving Transaction
 
         ON AST.Name = Branch.Name
-
     END
 
 EXEC PListBranchSummary;
@@ -78,7 +77,7 @@ EXEC PListBranchSummary;
 
 
 
--- Question 2
+-- Question 2 ADD SERVICE CHARGE $25 TO ALL CHECKING ACCOUNTS
 IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PAddServiceCharge'))
  	EXEC('CREATE PROCEDURE [PAddServiceCharge] AS BEGIN SET NOCOUNT ON; END');
 	GO
@@ -118,7 +117,7 @@ GO
 SELECT * FROM TAccount -- testing the current balance is updated
 GO
 
--- Question 3
+-- Question 3 LIST ACCOUNTS BELOW MINIMUM BALANCE
 IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PListAccountsBelowMinimumBalance'))
  	EXEC('CREATE PROCEDURE [PListAccountsBelowMinimumBalance] AS BEGIN SET NOCOUNT ON; END');
 	GO
@@ -146,7 +145,7 @@ EXEC PListAccountsBelowMinimumBalance
 GO
 
 
--- Question 4 
+-- Question 4 APPLY INTEREST CREDITS
 IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PApplyInterestCredits'))
  	EXEC('CREATE PROCEDURE [PApplyInterestCredits] AS BEGIN SET NOCOUNT ON; END');
 GO
@@ -206,7 +205,7 @@ SELECT * FROM TTransaction -- testing the rows are added
 GO
 
 
--- Question 5
+-- Question 5 APPLY SERVICE CHARGE
 IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PApplyServiceCharge'))
  	EXEC('CREATE PROCEDURE [PApplyServiceCharge] AS BEGIN SET NOCOUNT ON; END');
 GO
@@ -294,7 +293,7 @@ SELECT * FROM TAccount -- testing the current balance is updated
 SELECT * FROM TTransaction -- testing the rows are added 
 GO
 
--- Question 6
+-- Question 6 DELETE CUSTOMER TEST
 IF NOT EXISTS (SELECT *
 FROM sys.objects
 WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PDeleteCustomerTest'))
@@ -436,15 +435,35 @@ GO
 
 EXEC PWithdrawLoanPayment;
 
--- Question 8
-SELECT TBranch.Name, TCustomer.FirstName + ' ' + TCustomer.LastName AS 'Customer FullName', 
-        TAccount.[Type], TAccount.CurrentBalance, 
-        (SELECT TOP 1 (TransactionDateTime) 
-         FROM TTransaction 
-         WHERE AccountID = TAccount.AccountID 
-         ORDER BY TransactionDateTime DESC) AS 'DateTime of Last Transaction'
-FROM TAccount 
-JOIN TCustomer ON TAccount.CustomerID = TCustomer.CustomerID
-JOIN TBranch ON TAccount.BranchID = TBranch.BranchID
-JOIN TTransaction ON TAccount.AccountID = TTransaction.AccountID
+-- Question 8 LIST ACCOUNTS
+IF NOT EXISTS (SELECT *
+FROM sys.objects
+WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PListAccounts'))
+ 	EXEC('CREATE PROCEDURE [PListAccounts] AS BEGIN SET NOCOUNT ON; END');
+GO
 
+ALTER PROCEDURE [PListAccounts]
+
+AS
+    
+SET NOCOUNT ON;
+SET XACT_ABORT ON;
+
+BEGIN
+
+    SELECT TBranch.Name, TCustomer.FirstName + ' ' + TCustomer.LastName AS 'Customer FullName',
+        TAccount.[Type], TAccount.AccountID , TAccount.CurrentBalance,
+        (
+            SELECT TOP 1 (TransactionDateTime)
+            FROM TTransaction
+            WHERE AccountID = TAccount.AccountID
+            ORDER BY TransactionDateTime DESC
+        ) AS 'DateTime of Last Transaction'
+    FROM TAccount
+        JOIN TCustomer ON TAccount.CustomerID = TCustomer.CustomerID
+        JOIN TBranch ON TAccount.BranchID = TBranch.BranchID
+        JOIN TTransaction ON TAccount.AccountID = TTransaction.AccountID
+
+END
+
+EXEC PListAccounts
