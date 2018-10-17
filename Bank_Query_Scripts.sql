@@ -71,16 +71,16 @@ AS
 
         ON AST.Name = Branch.Name
     END
+GO
 
-EXEC PListBranchSummary;
-
-
+EXEC PListBranchSummary
+GO
 
 
 -- Question 2 ADD SERVICE CHARGE $25 TO ALL CHECKING ACCOUNTS
 IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PAddServiceCharge'))
  	EXEC('CREATE PROCEDURE [PAddServiceCharge] AS BEGIN SET NOCOUNT ON; END');
-	GO
+GO
 
 	ALTER PROCEDURE [PAddServiceCharge]
 
@@ -116,6 +116,8 @@ GO
  
 SELECT * FROM TAccount -- testing the current balance is updated
 GO
+
+
 
 -- Question 3 LIST ACCOUNTS BELOW MINIMUM BALANCE
 IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PListAccountsBelowMinimumBalance'))
@@ -201,6 +203,8 @@ GO
 EXEC PApplyInterestCredits;
 
 SELECT * FROM TAccount -- testing the current balance is updated
+GO
+
 SELECT * FROM TTransaction -- testing the rows are added 
 GO
 
@@ -290,8 +294,12 @@ EXEC PApplyServiceCharge
 GO
 
 SELECT * FROM TAccount -- testing the current balance is updated
+GO
+
 SELECT * FROM TTransaction -- testing the rows are added 
 GO
+
+
 
 -- Question 6 DELETE CUSTOMER TEST
 IF NOT EXISTS (SELECT *
@@ -314,9 +322,10 @@ BEGIN
     WHERE CustomerID = @CustomerID;
 
 END
+GO
 
-EXEC PDeleteCustomerTest @CustomerID = 5;
-
+EXEC PDeleteCustomerTest @CustomerID = 5
+GO
 
 
 -- Question 7 Widthdraw Loan Payment
@@ -475,7 +484,17 @@ BEGIN TRANSACTION
 
 GO
 
-EXEC PWithdrawLoanPayment;
+EXEC PWithdrawLoanPayment
+GO
+
+SELECT * FROM TLoan -- Testing loan amount is deducted after pay
+GO
+
+SELECT * FROM TTransaction -- Testing transaction is added after pay
+GO
+
+SELECT * FROM TAccount -- Testing current balance is deducted 
+GO
 
 
 -- Question 8 LIST ACCOUNTS
@@ -508,8 +527,10 @@ BEGIN
         JOIN TTransaction ON TAccount.AccountID = TTransaction.AccountID
 
 END
+GO
 
 EXEC PListAccounts
+GO
 
 
 -- REFERENCES

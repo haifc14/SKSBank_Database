@@ -7,6 +7,8 @@ GO
 -- Business Rules to validate the data before they are inserted
 -- into bank tables
 
+-- Adding data to tables is done on file AddDataToBankTables.sql
+
 	-- Rules for TBranch
 	IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PInsertTableBranch'))
  	EXEC('CREATE PROCEDURE [PInsertTableBranch] AS BEGIN SET NOCOUNT ON; END');
