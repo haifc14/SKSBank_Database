@@ -77,25 +77,61 @@ EXEC PListBranchSummary
 GO
 
 
+------------------------------------------
 -- Question 2 ADD SERVICE CHARGE $25 TO ALL CHECKING ACCOUNTS
-IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PAddServiceCharge'))
+--------------------------------------------
+IF NOT EXISTS (SELECT *
+FROM sys.objects
+WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PAddServiceCharge'))
  	EXEC('CREATE PROCEDURE [PAddServiceCharge] AS BEGIN SET NOCOUNT ON; END');
 GO
 
-	ALTER PROCEDURE [PAddServiceCharge]
+ALTER PROCEDURE [PAddServiceCharge]
 
-	    @AccountType NVARCHAR(100),
-        @DefinedServiceFee MONEY
-	AS
+    @DefinedServiceFee MONEY,
+    @AccountID INT = NULL,
+    @CheckNumber INT = 56566
+
+AS
 	 
 	SET NOCOUNT ON;
 	SET XACT_ABORT ON;
 
 	    BEGIN TRY
+            
+            DECLARE AddServiceFee_Cursor CURSOR 
+            FOR
+                SELECT AccountID
+                FROM TAccount
+                WHERE [TAccount].[Type] LIKE 'checking';
+            
+            OPEN AddServiceFee_Cursor;
 
-           UPDATE TAccount 
-           SET CurrentBalance = CurrentBalance - @DefinedServiceFee
-           WHERE TAccount.[Type] = @AccountType
+            FETCH NEXT FROM AddServiceFee_Cursor INTO @AccountID;
+
+            WHILE @@FETCH_STATUS <> -1
+
+                BEGIN
+
+                    DECLARE @CurrentDateTime DATETIME2;
+                    SET @CurrentDateTime = SYSDATETIME();
+
+                    EXEC.PInsertTableTransaction
+                        @AccountID = @AccountID,
+                        @Amount = @DefinedServiceFee,
+                        @Type = 'withdraw',
+                        @TransactionDateTime = @CurrentDateTime,
+                        @CheckNumber = @CheckNumber
+
+                    SET @CheckNumber = @CheckNumber + 878;
+
+                    FETCH NEXT FROM AddServiceFee_Cursor INTO @AccountID;
+
+                END
+            
+            CLOSE AddServiceFee_Cursor;
+
+            DEALLOCATE AddServiceFee_Cursor;   
        
 	    END TRY
 
@@ -106,20 +142,13 @@ GO
         END CATCH
 	GO
 
-
-DECLARE @AccType NVARCHAR(100), @ServiceFee MONEY
-SET @AccType = 'checking'
-SET @ServiceFee = 25
-EXEC PAddServiceCharge @AccountType = @AccType ,
-                          @DefinedServiceFee = @ServiceFee;
-GO
- 
-SELECT * FROM TAccount -- testing the current balance is updated
+EXEC PAddServiceCharge @DefinedServiceFee = 25
 GO
 
 
-
+---------------------------------------------
 -- Question 3 LIST ACCOUNTS BELOW MINIMUM BALANCE
+--------------------------------------------
 IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PListAccountsBelowMinimumBalance'))
  	EXEC('CREATE PROCEDURE [PListAccountsBelowMinimumBalance] AS BEGIN SET NOCOUNT ON; END');
 	GO
@@ -146,8 +175,9 @@ IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT
 EXEC PListAccountsBelowMinimumBalance
 GO
 
-
+--------------------------------------
 -- Question 4 APPLY INTEREST CREDITS
+--------------------------------------
 IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PApplyInterestCredits'))
  	EXEC('CREATE PROCEDURE [PApplyInterestCredits] AS BEGIN SET NOCOUNT ON; END');
 GO
@@ -208,8 +238,9 @@ GO
 SELECT * FROM TTransaction -- testing the rows are added 
 GO
 
-
+------------------------------------------
 -- Question 5 APPLY SERVICE CHARGE
+-----------------------------------------
 IF NOT EXISTS (SELECT * FROM sys.objects WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PApplyServiceCharge'))
  	EXEC('CREATE PROCEDURE [PApplyServiceCharge] AS BEGIN SET NOCOUNT ON; END');
 GO
@@ -300,8 +331,9 @@ SELECT * FROM TTransaction -- testing the rows are added
 GO
 
 
-
+----------------------------------------
 -- Question 6 DELETE CUSTOMER TEST
+-----------------------------------------
 IF NOT EXISTS (SELECT *
 FROM sys.objects
 WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PDeleteCustomerTest'))
@@ -327,8 +359,9 @@ GO
 EXEC PDeleteCustomerTest @CustomerID = 5
 GO
 
-
+-------------------------------------------
 -- Question 7 Widthdraw Loan Payment
+-------------------------------------------
 IF NOT EXISTS (SELECT *
 FROM sys.objects
 WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PWithdrawLoanPayment'))
@@ -496,8 +529,9 @@ GO
 SELECT * FROM TAccount -- Testing current balance is deducted 
 GO
 
-
+------------------------------------------
 -- Question 8 LIST ACCOUNTS
+-------------------------------------------
 IF NOT EXISTS (SELECT *
 FROM sys.objects
 WHERE type = 'P' AND OBJECT_ID = OBJECT_ID('PListAccounts'))
